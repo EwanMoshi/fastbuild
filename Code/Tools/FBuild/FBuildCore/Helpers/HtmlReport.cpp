@@ -1,9 +1,9 @@
-// Report
+// HtmlReport
 //------------------------------------------------------------------------------
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Report.h"
+#include "HtmlReport.h"
 
 // FBuild
 #include "Tools/FBuild/FBuildCore/FBuild.h"
@@ -52,7 +52,7 @@ uint32_t g_ReportNodeColors[] = {
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-Report::Report()
+HtmlReport::HtmlReport()
     : m_LibraryStats( 512, true )
     , m_NumPieCharts( 0 )
 {
@@ -62,7 +62,7 @@ Report::Report()
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-Report::~Report()
+HtmlReport::~HtmlReport()
 {
     const LibraryStats * const * end = m_LibraryStats.End();
     for ( LibraryStats ** it=m_LibraryStats.Begin(); it != end; ++it )
@@ -73,7 +73,7 @@ Report::~Report()
 
 // Generate
 //------------------------------------------------------------------------------
-void Report::Generate( const FBuildStats & stats )
+void HtmlReport::Generate( const FBuildStats & stats )
 {
     const Timer t;
 
@@ -111,7 +111,7 @@ void Report::Generate( const FBuildStats & stats )
 
 // Save
 //------------------------------------------------------------------------------
-void Report::Save() const
+void HtmlReport::Save() const
 {
     FileStream f;
     if ( f.Open( "report.html", FileStream::WRITE_ONLY ) )
@@ -122,7 +122,7 @@ void Report::Save() const
 
 // CreateHeader
 //------------------------------------------------------------------------------
-void Report::CreateHeader()
+void HtmlReport::CreateHeader()
 {
     const char * header =
         "<!doctype html>\n"
@@ -256,7 +256,7 @@ void Report::CreateHeader()
 
 // CreateTitle
 //------------------------------------------------------------------------------
-void Report::CreateTitle()
+void HtmlReport::CreateTitle()
 {
 
     Write( "<h1>FASTBuild Report</h1>\n" );
@@ -264,7 +264,7 @@ void Report::CreateTitle()
 
 // CreateOverview
 //------------------------------------------------------------------------------
-void Report::CreateOverview( const FBuildStats & stats )
+void HtmlReport::CreateOverview( const FBuildStats & stats )
 {
     DoSectionTitle( "Overview", "overview" );
 
@@ -354,7 +354,7 @@ void Report::CreateOverview( const FBuildStats & stats )
 
 // DoCacheStats
 //------------------------------------------------------------------------------
-void Report::DoCacheStats( const FBuildStats & stats )
+void HtmlReport::DoCacheStats( const FBuildStats & stats )
 {
     (void)stats;
 
@@ -461,7 +461,7 @@ void Report::DoCacheStats( const FBuildStats & stats )
 
 // DoCPUTimeByType
 //------------------------------------------------------------------------------
-void Report::DoCPUTimeByType( const FBuildStats & stats )
+void HtmlReport::DoCPUTimeByType( const FBuildStats & stats )
 {
     DoSectionTitle( "CPU Time by Node Type", "cpuTimeByNodeType" );
 
@@ -528,7 +528,7 @@ void Report::DoCPUTimeByType( const FBuildStats & stats )
 
 // DoCPUTimeByItem
 //------------------------------------------------------------------------------
-void Report::DoCPUTimeByItem( const FBuildStats & stats )
+void HtmlReport::DoCPUTimeByItem( const FBuildStats & stats )
 {
     const FBuildOptions & options = FBuild::Get().GetOptions();
     const bool cacheEnabled = ( options.m_UseCacheRead || options.m_UseCacheWrite );
@@ -587,7 +587,7 @@ void Report::DoCPUTimeByItem( const FBuildStats & stats )
 
 // DoCPUTimeByLibrary
 //------------------------------------------------------------------------------
-void Report::DoCPUTimeByLibrary()
+void HtmlReport::DoCPUTimeByLibrary()
 {
     DoSectionTitle( "CPU Time by Library", "cpuTimeByLibrary" );
 
@@ -656,7 +656,7 @@ void Report::DoCPUTimeByLibrary()
 // DoIncludes
 //------------------------------------------------------------------------------
 PRAGMA_DISABLE_PUSH_MSVC( 6262 ) // warning C6262: Function uses '262212' bytes of stack
-void Report::DoIncludes()
+void HtmlReport::DoIncludes()
 {
     DoSectionTitle( "Includes", "includes" );
 
@@ -740,7 +740,7 @@ PRAGMA_DISABLE_POP_MSVC // warning C6262: Function uses '262212' bytes of stack
 
 // DoPieChart
 //------------------------------------------------------------------------------
-void Report::DoPieChart( const Array< PieItem > & items, const char * units )
+void HtmlReport::DoPieChart( const Array< PieItem > & items, const char * units )
 {
     AStackString<> buffer;
 
@@ -795,7 +795,7 @@ void Report::DoPieChart( const Array< PieItem > & items, const char * units )
 
 // CreateFooter
 //------------------------------------------------------------------------------
-void Report::CreateFooter()
+void HtmlReport::CreateFooter()
 {
     const char * footer =
         "<br><br><br>\n"
@@ -806,14 +806,14 @@ void Report::CreateFooter()
 
 // DoSectionTitle
 //------------------------------------------------------------------------------
-void Report::DoSectionTitle( const char * sectionName, const char * sectionId )
+void HtmlReport::DoSectionTitle( const char * sectionName, const char * sectionId )
 {
     Write( "<h2 id=\"%s\">%s</h2>\n", sectionId, sectionName );
 }
 
 // DoTableStart
 //------------------------------------------------------------------------------
-void Report::DoTableStart( uint32_t width, const char * id, bool hidden )
+void HtmlReport::DoTableStart( uint32_t width, const char * id, bool hidden )
 {
     AStackString<> output;
     output.Format( "<table width=%u", width );
@@ -833,14 +833,14 @@ void Report::DoTableStart( uint32_t width, const char * id, bool hidden )
 
 // DoTableStop
 //------------------------------------------------------------------------------
-void Report::DoTableStop()
+void HtmlReport::DoTableStop()
 {
     Write( "</table>\n" );
 }
 
 // DoToggleSection
 //------------------------------------------------------------------------------
-void Report::DoToggleSection( size_t numMore )
+void HtmlReport::DoToggleSection( size_t numMore )
 {
     static uint32_t tableId = 0;
     ++tableId;
@@ -859,7 +859,7 @@ void Report::DoToggleSection( size_t numMore )
 
 // Write
 //------------------------------------------------------------------------------
-void Report::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
+void HtmlReport::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
     AStackString< 1024 > tmp;
 
@@ -879,7 +879,7 @@ void Report::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
 
 // GetLibraryStats
 //------------------------------------------------------------------------------
-void Report::GetLibraryStats(  const FBuildStats & stats )
+void HtmlReport::GetLibraryStats(  const FBuildStats & stats )
 {
     // gather library stats, sorted by CPU cost
     GetLibraryStatsRecurse( m_LibraryStats, stats.GetRootNode(), nullptr );
@@ -888,7 +888,7 @@ void Report::GetLibraryStats(  const FBuildStats & stats )
 
 // GetLibraryStatsRecurse
 //------------------------------------------------------------------------------
-void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const Node * node, LibraryStats * currentLib ) const
+void HtmlReport::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const Node * node, LibraryStats * currentLib ) const
 {
     // skip nodes we've already seen
     if ( node->GetStatFlag( Node::STATS_REPORT_PROCESSED ) )
@@ -981,7 +981,7 @@ void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const N
 
 // GetLibraryStatsRecurse
 //------------------------------------------------------------------------------
-void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const Dependencies & dependencies, LibraryStats * currentLib ) const
+void HtmlReport::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const Dependencies & dependencies, LibraryStats * currentLib ) const
 {
     const Dependency * const end = dependencies.End();
     for ( const Dependency * it = dependencies.Begin(); it != end; ++it )
@@ -992,7 +992,7 @@ void Report::GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const D
 
 // GetIncludeFilesRecurse
 //------------------------------------------------------------------------------
-void Report::GetIncludeFilesRecurse( IncludeStatsMap & incStats, const Node * node ) const
+void HtmlReport::GetIncludeFilesRecurse( IncludeStatsMap & incStats, const Node * node ) const
 {
     const Node::Type type = node->GetType();
     if ( type == Node::OBJECT_NODE )
@@ -1027,7 +1027,7 @@ void Report::GetIncludeFilesRecurse( IncludeStatsMap & incStats, const Node * no
 
 // AddInclude
 //------------------------------------------------------------------------------
-void Report::AddInclude( IncludeStatsMap & incStats, const Node * node, const Node * parentNode ) const
+void HtmlReport::AddInclude( IncludeStatsMap & incStats, const Node * node, const Node * parentNode ) const
 {
     bool isHeaderInPCH = false;
     if ( parentNode->GetType() == Node::OBJECT_NODE )
@@ -1049,7 +1049,7 @@ void Report::AddInclude( IncludeStatsMap & incStats, const Node * node, const No
 
 // IncludeStatsMap (CONSTRUCTOR)
 //------------------------------------------------------------------------------
-Report::IncludeStatsMap::IncludeStatsMap()
+HtmlReport::IncludeStatsMap::IncludeStatsMap()
     : m_Pool( sizeof( IncludeStats ), __alignof( IncludeStats ) )
 {
     memset( m_Table, 0, sizeof( m_Table ) );
@@ -1057,7 +1057,7 @@ Report::IncludeStatsMap::IncludeStatsMap()
 
 // IncludeStatsMap (DESTRUCTOR)
 //------------------------------------------------------------------------------
-Report::IncludeStatsMap::~IncludeStatsMap()
+HtmlReport::IncludeStatsMap::~IncludeStatsMap()
 {
     for ( size_t i=0; i<65536; ++i )
     {
@@ -1073,7 +1073,7 @@ Report::IncludeStatsMap::~IncludeStatsMap()
 
 // Find
 //------------------------------------------------------------------------------
-Report::IncludeStats * Report::IncludeStatsMap::Find( const Node * node ) const
+HtmlReport::IncludeStats * HtmlReport::IncludeStatsMap::Find( const Node * node ) const
 {
     // caculate table entry
     const uint32_t hash = node->GetNameCRC();
@@ -1096,7 +1096,7 @@ Report::IncludeStats * Report::IncludeStatsMap::Find( const Node * node ) const
 
 // Insert
 //------------------------------------------------------------------------------
-Report::IncludeStats * Report::IncludeStatsMap::Insert( const Node * node )
+HtmlReport::IncludeStats * HtmlReport::IncludeStatsMap::Insert( const Node * node )
 {
     // caculate table entry
     const uint32_t hash = node->GetNameCRC();
@@ -1115,7 +1115,7 @@ Report::IncludeStats * Report::IncludeStatsMap::Insert( const Node * node )
 
 // Flatten
 //------------------------------------------------------------------------------
-void Report::IncludeStatsMap::Flatten( Array< const IncludeStats * > & stats ) const
+void HtmlReport::IncludeStatsMap::Flatten( Array< const IncludeStats * > & stats ) const
 {
     for ( size_t i=0; i<65536; ++i )
     {

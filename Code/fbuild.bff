@@ -316,7 +316,7 @@ Settings
 #if __WINDOWS__
     .ProjectCommon =
     [
-        .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -cache ^$(ProjectName)-^$(Configuration)'
+        .ProjectBuildCommand        = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -report -monitor -cache ^$(ProjectName)-^$(Configuration)'
         .ProjectRebuildCommand      = 'cd ^$(SolutionDir)\..\..\Code\ &amp; fbuild -vs -dist -monitor -cache -clean ^$(ProjectName)-^$(Configuration)'
         .OutputDirectory            = '^$(SolutionDir)\Temp'
         .IntermediateDirectory      = '^$(SolutionDir)\Temp'

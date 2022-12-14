@@ -1,0 +1,510 @@
+<!doctype html>
+<style type="text/css">
+body{
+font-family:arial;
+width:1000px;
+margin:0 auto;
+font-size:13px
+}
+th{
+background-color:#e0e0e0;
+padding:4px;
+height:15px;
+text-align:left;
+border-top-left-radius:5px;
+-moz-border-radius-topleft:5px;
+border-top-right-radius:5px;
+-moz-border-radius-topright:5px;
+font-weight:bold;
+}
+tr:nth-child(odd){
+background-color:#f0f0f0;
+}
+h1{
+background-color:#b0b0b0;
+border-radius:5px;
+padding:4px;
+height:40px;
+text-align:left;
+font-weight:bold;
+}
+h2{
+background-color:#d0d0d0;
+border-radius:5px;
+padding:4px;
+height:27px;
+text-align:left;
+font-weight:bold;
+}
+table{
+  padding-left:10px;
+}
+td
+word-break:break-all;
+padding:3px;
+}
+.perc{
+color:#aaaaaa;
+font-size:10px
+}
+</style>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>FASTBuild Report</title>
+</head>
+<body>
+<script type="text/javascript">
+function getTotal(data)
+{
+ var total = 0;
+ for (var j = 0; j < data.length; j++)
+ {
+  total += (typeof data[j] == 'number') ? data[j] : 0;
+ }
+ return total;
+}
+function plotData(canvasName,myData,myLabels,myColor, units)
+{
+ var canvas;
+ var ctx;
+ var lastend = 0;
+ var myTotal = getTotal(myData);
+ canvas = document.getElementById(canvasName);
+ ctx = canvas.getContext("2d");
+ ctx.clearRect(0, 0, canvas.width, canvas.height);
+ ctx.fillStyle = "black";
+ ctx.beginPath();
+ ctx.moveTo(70,70);
+ ctx.arc(70,70,66,0,(Math.PI*2),false);
+ ctx.lineTo(70,70);
+ ctx.fill();
+ for (var i = 0; i < myData.length; i++)
+ {
+  ctx.fillStyle = myColor[i];
+  ctx.beginPath();
+  ctx.moveTo(70,70);
+  ctx.arc(70,70,65,lastend,lastend+(Math.PI*2*(myData[i]/myTotal)),false);
+  ctx.lineTo(70,70);
+  ctx.fill();
+  lastend += Math.PI*2*(myData[i]/myTotal);
+ }
+ for (var i = 0; i < myData.length; i++)
+ {
+  var y = 20 + ( i * 25 );
+  ctx.fillStyle="#888888";
+  ctx.fillRect(200-1,y-15-1,22,22)
+  ctx.fillStyle=myColor[ i ];
+  ctx.fillRect(200,y-15,20,20)
+  ctx.fillStyle = "black";
+  ctx.font = "16px Arial";
+  ctx.fillText(myLabels[ i ], 230, y );
+  var perc = ( 100.0 * myData[ i ] / myTotal ).toFixed(1);
+  ctx.fillText( perc + "% (" + myData[ i ] + units + ")", 330, y );
+ }
+}
+function toggleTable(tableName)
+{
+ var table = document.getElementById(tableName);
+ table.style.display = (table.style.display == "table") ? "none" : "table";
+}
+</script>
+<h1>FASTBuild Report</h1>
+<h2 id="overview">Overview</h2>
+<table width=990>
+<tr><th width=150>Item</th><th>Details</th></tr>
+<tr><td width=80>Cmd Line Options</td><td>"fbuild" -vs -dist -report -monitor -cache "All-x64-Debug" -wrapperintermediate -wrapperfinal</td></tr><tr><td>Target(s)</td><td>All-x64-Debug</td></tr>
+<tr><td>Result</td><td>OK</td></tr>
+<tr><td>Time</td><td>0.450s</td></tr>
+<tr><td>CPU Time</td><td>0.908s (2.0:1)</td></tr>
+<tr><td>Remote CPU Time</td><td>0.000s (0.0:1)</td></tr>
+<tr><td>Version</td><td>v1.08 Windows</td></tr>
+<tr><td>Report Generated</td><td>0.001s                       - Wed 14-Dec-2022 - 13:59:35</td></tr>
+</table>
+<h2 id="cpuTimeByNodeType">CPU Time by Node Type</h2>
+<section>
+<div>
+<canvas id="canvas1" width="500" height="265">
+HTML5 Canvas support required.
+</canvas>
+</div>
+<script type="text/javascript">
+    var myData = [0.693,0.206,0.009,0.000,0.000,0.000,0.000,0.000,0.000];
+    var myLabels = ["Exe","Object","Directory","Alias","File","Unity","Compiler","ObjectList","TextFile"];
+    var myColors = ["#ffff88","#ff8888","#aaaaaa","#228b22","#888888","#88aaff","#dda0dd","#444444","#ffffff"];
+    plotData("canvas1",myData,myLabels,myColors," s");
+</script>
+</section>
+<table width=990>
+<tr><th width=80>Type</th><th width=80>Time</th><th width=80>Processed</th><th width=80>Built</th><th width=80>Cache Hits</th></tr>
+<tr><td>Exe</td><td>0.693s</td><td>4</td><td>3</td><td>-</td></tr>
+<tr><td>Object</td><td>0.206s</td><td>242</td><td>1</td><td>0</td></tr>
+<tr><td>Directory</td><td>0.009s</td><td>8</td><td>8</td><td>-</td></tr>
+<tr><td>Alias</td><td>0.000s</td><td>1</td><td>1</td><td>-</td></tr>
+<tr><td>File</td><td>0.000s</td><td>612</td><td>612</td><td>-</td></tr>
+<tr><td>Unity</td><td>0.000s</td><td>8</td><td>0</td><td>-</td></tr>
+<tr><td>Compiler</td><td>0.000s</td><td>2</td><td>0</td><td>-</td></tr>
+<tr><td>ObjectList</td><td>0.000s</td><td>10</td><td>1</td><td>-</td></tr>
+<tr><td>TextFile</td><td>0.000s</td><td>4</td><td>0</td><td>-</td></tr>
+</table>
+<h2 id="cacheStats">Cache Stats</h2>
+<section>
+<div>
+<canvas id="canvas2" width="500" height="140">
+HTML5 Canvas support required.
+</canvas>
+</div>
+<script type="text/javascript">
+    var myData = [1.000,0.000,0.000];
+    var myLabels = ["Uncacheable","Cache Miss","Cache Hit"];
+    var myColors = ["#ff8888","#ffcc88","#88ff88"];
+    plotData("canvas2",myData,myLabels,myColors,"");
+</script>
+</section>
+<table width=990>
+<tr><th>Library</th><th style="width:70px;">Items</th><th style="width:90px;">Out-of-Date</th><th style="width:90px;">Cacheable</th><th style="width:70px;">Hits</th><th style="width:70px;">Misses</th><th style="width:60px;">Stores</th><th style="width:100px;">Store Time</th></tr>
+<tr><td>FBuildCore-Lib-x64-Debug</td><td>115</td><td>1 <font class='perc'>(0.9%)</font></td><td>0 <font class='perc'>(0.0%)</font></td><td>0 <font class='perc'>(0.0%)</font></td><td>0 <font class='perc'>(0.0%)</font></td><td>0</td><td>0.000s</td></tr>
+</table>
+<h2 id="cpuTimeByLibrary">CPU Time by Library</h2>
+<table width=990>
+<tr><th style="width:80px;">Time</th><th style="width:50px;">%</th><th style="width:70px;">Obj Built</th><th style="width:50px;">Type</th><th>Name</th></tr>
+<tr><td>0.206s</td><td>100.0</td><td>1</td><td>ObjectList</td><td>FBuildCore-Lib-x64-Debug</td></tr>
+</table>
+<h2 id="cpuTimeByItem">CPU Time by Item</h2>
+<table width=990>
+<tr><th style="width:100px;">Time</th><th style="width:100px;">Type</th><th style="width:120px;">Cache</th><th>Name</th></tr>
+<tr><td>0.236s</td><td>Exe</td><td>N/A</td><td>T:\fastbuild\tmp\x64-Debug\Tools\FBuild\FBuildTest\FBuildTest.exe</td></tr>
+<tr><td>0.229s</td><td>Exe</td><td>N/A</td><td>T:\fastbuild\tmp\x64-Debug\Tools\FBuild\FBuildWorker\FBuildWorker.exe</td></tr>
+<tr><td>0.228s</td><td>Exe</td><td>N/A</td><td>T:\fastbuild\tmp\x64-Debug\Tools\FBuild\FBuild\FBuild.exe</td></tr>
+<tr><td>0.206s</td><td>Object</td><td>N/A</td><td>T:\fastbuild\tmp\x64-Debug\Tools\FBuild\FBuildCore\FBuildOptions.obj</td></tr>
+<tr><td>0.007s</td><td>Directory</td><td>N/A</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildTest\|*.cpp|true|rw|T:\fastbuild\Code\Tools\FBuild\FBuildTest\Data\<</td></tr>
+<tr><td>0.001s</td><td>Directory</td><td>N/A</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\|*.cpp|true|rw|</td></tr>
+<tr><td>0.001s</td><td>Directory</td><td>N/A</td><td>T:\fastbuild\Code\Core\|*.cpp|true|rw|T:\fastbuild\Code\Core\CoreTest\<|Core\Mem\MemTracker.cpp<</td></tr>
+</table>
+<h2 id="includes">Includes</h2>
+<h3>FBuildCore-Lib-x64-Debug</h3>
+<table width=990>
+<tr><th style="width:80px;">Objects</th><th style="width:80px;">Included</td><th style="width:60px;">PCH</th><th>Name</th></tr>
+<tr><td>115</td><td>115</td><td>no</td><td>T:\fastbuild\Code\Core\Env\Assert.h</td></tr>
+<tr><td>115</td><td>115</td><td>no</td><td>T:\fastbuild\Code\Core\Containers\Sort.h</td></tr>
+<tr><td>115</td><td>115</td><td>no</td><td>T:\fastbuild\Code\Core\Containers\Forward.h</td></tr>
+<tr><td>115</td><td>115</td><td>no</td><td>T:\fastbuild\Code\Core\Math\Conversions.h</td></tr>
+<tr><td>115</td><td>115</td><td>no</td><td>T:\fastbuild\Code\Core\Env\Types.h</td></tr>
+<tr><td>115</td><td>115</td><td>no</td><td>T:\fastbuild\Code\Core\Containers\Array.h</td></tr>
+<tr><td>115</td><td>115</td><td>no</td><td>T:\fastbuild\Code\Core\Containers\Move.h</td></tr>
+<tr><td>115</td><td>115</td><td>no</td><td>T:\fastbuild\Code\Core\Process\Mutex.h</td></tr>
+<tr><td>115</td><td>115</td><td>no</td><td>T:\fastbuild\Code\Core\Mem\MemTracker.h</td></tr>
+<tr><td>115</td><td>115</td><td>no</td><td>T:\fastbuild\Code\Core\Mem\Mem.h</td></tr>
+</table>
+<a href='javascript:toggleTable("table1");'>304 More...</a>
+<table width=990 id="table1" style="display:none;">
+<tr></tr><tr><td style="width:80px;">115</td><td style="width:80px;">112</td><td style="width:60px;">no</td><td>T:\fastbuild\Code\Core\Strings\AString.h</td></tr>
+<tr><td>115</td><td>112</td><td>no</td><td>T:\fastbuild\Code\Core\Env\MSVCStaticAnalysis.h</td></tr>
+<tr><td>115</td><td>97</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\corecrt.h</td></tr>
+<tr><td>115</td><td>97</td><td>no</td><td>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.34.31933\include\vadefs.h</td></tr>
+<tr><td>115</td><td>97</td><td>no</td><td>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.34.31933\include\vcruntime.h</td></tr>
+<tr><td>115</td><td>97</td><td>no</td><td>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.34.31933\include\sal.h</td></tr>
+<tr><td>115</td><td>97</td><td>no</td><td>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.34.31933\include\concurrencysal.h</td></tr>
+<tr><td>115</td><td>90</td><td>no</td><td>T:\fastbuild\Code\Core\Reflection\ReflectionMacros.h</td></tr>
+<tr><td>115</td><td>90</td><td>no</td><td>T:\fastbuild\Code\Core\Reflection\ReflectionInfo.h</td></tr>
+<tr><td>115</td><td>90</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\stddef.h</td></tr>
+<tr><td>115</td><td>90</td><td>no</td><td>T:\fastbuild\Code\Core\Reflection\MetaData\MetaData.h</td></tr>
+<tr><td>115</td><td>90</td><td>no</td><td>T:\fastbuild\Code\Core\Reflection\ReflectionIter.h</td></tr>
+<tr><td>115</td><td>90</td><td>no</td><td>T:\fastbuild\Code\Core\Reflection\PropertyType.h</td></tr>
+<tr><td>115</td><td>86</td><td>no</td><td>T:\fastbuild\Code\Core\Reflection\Struct.h</td></tr>
+<tr><td>115</td><td>86</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\Dependencies.h</td></tr>
+<tr><td>115</td><td>86</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\Node.h</td></tr>
+<tr><td>115</td><td>84</td><td>no</td><td>T:\fastbuild\Code\Core\Strings\AStackString.h</td></tr>
+<tr><td>115</td><td>69</td><td>no</td><td>T:\fastbuild\Code\Core\Time\Timer.h</td></tr>
+<tr><td>115</td><td>67</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Helpers\SLNGenerator.h</td></tr>
+<tr><td>115</td><td>67</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Helpers\VSProjectGenerator.h</td></tr>
+<tr><td>115</td><td>67</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\BFFFileExists.h</td></tr>
+<tr><td>115</td><td>66</td><td>no</td><td>T:\fastbuild\Code\Core\Containers\Singleton.h</td></tr>
+<tr><td>115</td><td>66</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\NodeGraph.h</td></tr>
+<tr><td>115</td><td>65</td><td>no</td><td>T:\fastbuild\Code\Core\FileIO\IOStream.h</td></tr>
+<tr><td>115</td><td>64</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\BFFFile.h</td></tr>
+<tr><td>115</td><td>63</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Tokenizer\BFFToken.h</td></tr>
+<tr><td>115</td><td>61</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Tokenizer\BFFTokenRange.h</td></tr>
+<tr><td>115</td><td>59</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Protocol\Protocol.h</td></tr>
+<tr><td>115</td><td>59</td><td>no</td><td>T:\fastbuild\Code\Core\FileIO\FileStream.h</td></tr>
+<tr><td>115</td><td>56</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\BFFUserFunctions.h</td></tr>
+<tr><td>115</td><td>56</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Helpers\Report.h</td></tr>
+<tr><td>115</td><td>56</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\FileNode.h</td></tr>
+<tr><td>115</td><td>56</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\FBuildOptions.h</td></tr>
+<tr><td>115</td><td>56</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\WorkerPool\WorkerBrokerage.h</td></tr>
+<tr><td>115</td><td>55</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\BFFVariable.h</td></tr>
+<tr><td>115</td><td>55</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Helpers\FBuildStats.h</td></tr>
+<tr><td>115</td><td>55</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\FBuild.h</td></tr>
+<tr><td>115</td><td>54</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Error.h</td></tr>
+<tr><td>115</td><td>51</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\FLog.h</td></tr>
+<tr><td>115</td><td>50</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\Function.h</td></tr>
+<tr><td>115</td><td>45</td><td>no</td><td>T:\fastbuild\Code\Core\FileIO\FileIO.h</td></tr>
+<tr><td>115</td><td>36</td><td>no</td><td>T:\fastbuild\Code\Core\FileIO\PathUtils.h</td></tr>
+<tr><td>115</td><td>33</td><td>no</td><td>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.34.31933\include\tmmintrin.h</td></tr>
+<tr><td>115</td><td>33</td><td>no</td><td>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.34.31933\include\smmintrin.h</td></tr>
+<tr><td>115</td><td>33</td><td>no</td><td>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.34.31933\include\xmmintrin.h</td></tr>
+<tr><td>115</td><td>33</td><td>no</td><td>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.34.31933\include\nmmintrin.h</td></tr>
+<tr><td>115</td><td>33</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\malloc.h</td></tr>
+<tr><td>115</td><td>33</td><td>no</td><td>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.34.31933\include\zmmintrin.h</td></tr>
+<tr><td>115</td><td>33</td><td>no</td><td>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.34.31933\include\setjmp.h</td></tr>
+<tr><td>115</td><td>33</td><td>no</td><td>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.34.31933\include\intrin.h</td></tr>
+<tr><td>115</td><td>33</td><td>no</td><td>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.34.31933\include\wmmintrin.h</td></tr>
+<tr><td>115</td><td>33</td><td>no</td><td>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.34.31933\include\immintrin.h</td></tr>
+<tr><td>115</td><td>33</td><td>no</td><td>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.34.31933\include\mmintrin.h</td></tr>
+<tr><td>115</td><td>33</td><td>no</td><td>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.34.31933\include\intrin0.inl.h</td></tr>
+<tr><td>115</td><td>33</td><td>no</td><td>T:\fastbuild\Code\Core\Process\Atomic.h</td></tr>
+<tr><td>115</td><td>33</td><td>no</td><td>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.34.31933\include\emmintrin.h</td></tr>
+<tr><td>115</td><td>33</td><td>no</td><td>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.34.31933\include\ammintrin.h</td></tr>
+<tr><td>115</td><td>33</td><td>no</td><td>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.34.31933\include\pmmintrin.h</td></tr>
+<tr><td>115</td><td>33</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\corecrt_malloc.h</td></tr>
+<tr><td>115</td><td>29</td><td>no</td><td>T:\fastbuild\Code\Core\Env\Env.h</td></tr>
+<tr><td>115</td><td>28</td><td>no</td><td>T:\fastbuild\Code\Core\Process\Process.h</td></tr>
+<tr><td>115</td><td>28</td><td>no</td><td>T:\fastbuild\Code\Core\Math\xxHash.h</td></tr>
+<tr><td>115</td><td>28</td><td>no</td><td>T:\fastbuild\Code\Core\Containers\UniquePtr.h</td></tr>
+<tr><td>115</td><td>24</td><td>no</td><td>T:\fastbuild\Code\Core\Process\Thread.h</td></tr>
+<tr><td>115</td><td>24</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\errno.h</td></tr>
+<tr><td>115</td><td>24</td><td>no</td><td>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.34.31933\include\vcruntime_string.h</td></tr>
+<tr><td>115</td><td>24</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\corecrt_memory.h</td></tr>
+<tr><td>115</td><td>24</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\corecrt_memcpy_s.h</td></tr>
+<tr><td>115</td><td>22</td><td>no</td><td>T:\fastbuild\Code\Core\Profile\Profile.h</td></tr>
+<tr><td>115</td><td>22</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\ObjectNode.h</td></tr>
+<tr><td>115</td><td>22</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\string.h</td></tr>
+<tr><td>115</td><td>22</td><td>no</td><td>T:\fastbuild\Code\Core\Profile\ProfileManager.h</td></tr>
+<tr><td>115</td><td>22</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\corecrt_wstring.h</td></tr>
+<tr><td>115</td><td>20</td><td>no</td><td>T:\fastbuild\Code\Core\Env\ErrorFormat.h</td></tr>
+<tr><td>115</td><td>20</td><td>no</td><td>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.34.31933\include\stdarg.h</td></tr>
+<tr><td>115</td><td>18</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Helpers\Args.h</td></tr>
+<tr><td>115</td><td>18</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Helpers\ResponseFile.h</td></tr>
+<tr><td>115</td><td>16</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\DirectoryListNode.h</td></tr>
+<tr><td>115</td><td>16</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Helpers\ToolManifest.h</td></tr>
+<tr><td>115</td><td>15</td><td>no</td><td>T:\fastbuild\Code\Core\Process\Semaphore.h</td></tr>
+<tr><td>115</td><td>14</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\LinkerNodeFileExistsCache.h</td></tr>
+<tr><td>115</td><td>14</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\BFFStackFrame.h</td></tr>
+<tr><td>115</td><td>14</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\WorkerPool\Job.h</td></tr>
+<tr><td>115</td><td>14</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\CompilerNode.h</td></tr>
+<tr><td>115</td><td>14</td><td>no</td><td>T:\fastbuild\Code\Core\Containers\UnorderedMap.h</td></tr>
+<tr><td>115</td><td>13</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\BFFMacros.h</td></tr>
+<tr><td>115</td><td>13</td><td>no</td><td>T:\fastbuild\Code\Core\Tracing\Tracing.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\basetsd.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\processthreadsapi.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\heapapi.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\processenv.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\threadpoollegacyapiset.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\fibersapi.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\WS2tcpip.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\winnt.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\ktmtypes.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\minwindef.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\wow64apiset.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\consoleapi2.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\ws2ipdef.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\ime_cmodes.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\profileapi.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\mcx.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\utilapiset.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\verrsrc.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\windows.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\errhandlingapi.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\sdkddkver.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\winbase.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\datetimeapi.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\fileapi.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\threadpoolapiset.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\guiddef.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\interlockedapi.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\winver.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\sdv_driverspecs.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\consoleapi3.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\ObjectListNode.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\winerror.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\pshpack8.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\jobapi.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\libloaderapi.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.34.31933\include\limits.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\enclaveapi.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\ws2def.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\tvout.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\winuser.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\wincontypes.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.34.31933\include\excpt.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\systemtopologyapi.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\winsvc.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\pshpack1.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\processtopologyapi.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\securitybaseapi.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\corecrt_wctype.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\stringapiset.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\ioapiset.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\debugapi.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\windef.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\wincon.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\handleapi.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\memoryapi.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\apiset.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\securityappcontainer.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>T:\fastbuild\Code\Core\Env\WindowsHeader.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\sysinfoapi.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\ctype.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\specstrings.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\wingdi.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\WinSock2.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\wnnc.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\imm.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\pshpack4.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\jobapi2.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\in6addr.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\apiquery2.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\synchapi.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\driverspecs.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\inaddr.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\winpackagefamily.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\minwinbase.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\apisetcconv.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\ExeDrivers\Compiler\CompilerDriverBase.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\qos.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\winapifamily.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\winnetwk.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\specstrings_strict.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\timezoneapi.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\specstrings_undef.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\kernelspecs.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\realtimeapiset.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\winnls.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\winreg.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\pshpack2.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\poppack.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\reason.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\namespaceapi.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\stralign.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\consoleapi.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\fileapifromapp.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Tokenizer\BFFTokenizer.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\BFFParser.h</td></tr>
+<tr><td>115</td><td>12</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\namedpipeapi.h</td></tr>
+<tr><td>115</td><td>10</td><td>no</td><td>T:\fastbuild\Code\Core\FileIO\ConstMemoryStream.h</td></tr>
+<tr><td>115</td><td>10</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\VSProjectBaseNode.h</td></tr>
+<tr><td>115</td><td>10</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Helpers\ProjectGeneratorBase.h</td></tr>
+<tr><td>115</td><td>9</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\WorkerPool\WorkerThread.h</td></tr>
+<tr><td>115</td><td>9</td><td>no</td><td>T:\fastbuild\Code\Core\FileIO\MemoryStream.h</td></tr>
+<tr><td>115</td><td>9</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\AliasNode.h</td></tr>
+<tr><td>115</td><td>9</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\stdio.h</td></tr>
+<tr><td>115</td><td>9</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\LinkerNode.h</td></tr>
+<tr><td>115</td><td>9</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\corecrt_wstdio.h</td></tr>
+<tr><td>115</td><td>9</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\corecrt_stdio_config.h</td></tr>
+<tr><td>115</td><td>8</td><td>no</td><td>T:\fastbuild\Code\Core\Reflection\Object.h</td></tr>
+<tr><td>115</td><td>8</td><td>no</td><td>T:\fastbuild\Code\Core\Reflection\MetaData\MetaDataInterface.h</td></tr>
+<tr><td>115</td><td>8</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\LibraryNode.h</td></tr>
+<tr><td>115</td><td>7</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\CopyFileNode.h</td></tr>
+<tr><td>115</td><td>7</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\ExecNode.h</td></tr>
+<tr><td>115</td><td>7</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Helpers\BuildProfiler.h</td></tr>
+<tr><td>115</td><td>7</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\UnityNode.h</td></tr>
+<tr><td>115</td><td>6</td><td>no</td><td>T:\fastbuild\Code\Core\Network\NetworkStartupHelper.h</td></tr>
+<tr><td>115</td><td>6</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\WorkerPool\JobQueue.h</td></tr>
+<tr><td>115</td><td>6</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\DLLNode.h</td></tr>
+<tr><td>115</td><td>6</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\SettingsNode.h</td></tr>
+<tr><td>115</td><td>6</td><td>no</td><td>T:\fastbuild\Code\Core\Network\TCPConnectionPool.h</td></tr>
+<tr><td>115</td><td>5</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\SLNNode.h</td></tr>
+<tr><td>115</td><td>5</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\TestNode.h</td></tr>
+<tr><td>115</td><td>5</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\VCXProjectNode.h</td></tr>
+<tr><td>115</td><td>5</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Cache\ICache.h</td></tr>
+<tr><td>115</td><td>5</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\XCodeProjectNode.h</td></tr>
+<tr><td>115</td><td>5</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionObjectList.h</td></tr>
+<tr><td>115</td><td>5</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\ExeNode.h</td></tr>
+<tr><td>115</td><td>5</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\BFFKeywords.h</td></tr>
+<tr><td>115</td><td>4</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\CSNode.h</td></tr>
+<tr><td>115</td><td>4</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\VSProjectExternalNode.h</td></tr>
+<tr><td>115</td><td>4</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\TextFileNode.h</td></tr>
+<tr><td>115</td><td>4</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\WorkerPool\JobQueueRemote.h</td></tr>
+<tr><td>115</td><td>4</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\RemoveDirNode.h</td></tr>
+<tr><td>115</td><td>4</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\NodeProxy.h</td></tr>
+<tr><td>115</td><td>4</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\ListDependenciesNode.h</td></tr>
+<tr><td>115</td><td>4</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\CopyDirNode.h</td></tr>
+<tr><td>115</td><td>4</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Helpers\MultiBuffer.h</td></tr>
+<tr><td>115</td><td>4</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\FBuildVersion.h</td></tr>
+<tr><td>115</td><td>4</td><td>no</td><td>T:\fastbuild\Code\Core\Time\Time.h</td></tr>
+<tr><td>115</td><td>4</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Helpers\Compressor.h</td></tr>
+<tr><td>115</td><td>3</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\MetaData\Meta_IgnoreForComparison.h</td></tr>
+<tr><td>115</td><td>3</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\MetaData\Meta_EmbedMembers.h</td></tr>
+<tr><td>115</td><td>3</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionExecutable.h</td></tr>
+<tr><td>115</td><td>3</td><td>no</td><td>T:\fastbuild\Code\Core\Reflection\ReflectedProperty.h</td></tr>
+<tr><td>115</td><td>3</td><td>no</td><td>T:\fastbuild\Code\Core\Math\CRC32.h</td></tr>
+<tr><td>115</td><td>3</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Cache\LightCache.h</td></tr>
+<tr><td>115</td><td>3</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\WorkerPool\WorkerThreadRemote.h</td></tr>
+<tr><td>115</td><td>3</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\MetaData\Meta_Name.h</td></tr>
+<tr><td>115</td><td>3</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\MetaData\Meta_InheritFromOwner.h</td></tr>
+<tr><td>115</td><td>3</td><td>no</td><td>T:\fastbuild\Code\Core\Reflection\ReflectionSettings.h</td></tr>
+<tr><td>115</td><td>3</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionSettings.h</td></tr>
+<tr><td>115</td><td>3</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Helpers\JSON.h</td></tr>
+<tr><td>115</td><td>3</td><td>no</td><td>T:\fastbuild\Code\Core\Mem\MemPoolBlock.h</td></tr>
+<tr><td>115</td><td>3</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\memory.h</td></tr>
+<tr><td>115</td><td>3</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Graph\MetaData\Meta_AllowNonFile.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionLibrary.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionVSSolution.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\ExeDrivers\Compiler\CompilerDriver_OrbisWavePSSLC.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionCopyDir.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\ExeDrivers\Compiler\CompilerDriver_GreenHillsWiiU.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Cache\CachePlugin.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionPrint.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionIf.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionVCXProject.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\corecrt_wtime.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildWorker\Worker\WorkerSettings.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Protocol\Client.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionError.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\time.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\BFFBooleanExpParser.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionXCodeProject.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Helpers\HtmlReport.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Cache\Cache.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionCompiler.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\ExeDrivers\Compiler\CompilerDriver_Generic.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\ExeDrivers\Compiler\CompilerDriver_CodeWarriorWii.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Helpers\XCodeProjectGenerator.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionUsing.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionTextFile.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\ExeDrivers\Compiler\CompilerDriver_GCCClang.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionAlias.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Protocol\Server.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\ExeDrivers\Compiler\CompilerDriver_CL.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Helpers\CIncludeParser.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionUnity.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Helpers\CompilationDatabase.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionCopy.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\ExeDrivers\Compiler\CompilerDriver_SNC.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionCSAssembly.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionForEach.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Cache\CachePluginInterface.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionVSProjectExternal.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionListDependencies.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionTest.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionRemoveDir.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\ExeDrivers\Compiler\CompilerDriver_QtRCC.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionDLL.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\ExeDrivers\Compiler\CompilerDriver_VBCC.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\BFF\Functions\FunctionExec.h</td></tr>
+<tr><td>115</td><td>2</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\ExeDrivers\Compiler\CompilerDriver_CUDA.h</td></tr>
+<tr><td>115</td><td>1</td><td>no</td><td>T:\fastbuild\Code\Core\Reflection\MetaData\Meta_Range.h</td></tr>
+<tr><td>115</td><td>1</td><td>no</td><td>T:\fastbuild\Code\Core\Reflection\MetaData\Meta_Path.h</td></tr>
+<tr><td>115</td><td>1</td><td>no</td><td>T:\fastbuild\Code\Core\Process\SystemMutex.h</td></tr>
+<tr><td>115</td><td>1</td><td>no</td><td>T:\fastbuild\External\LZ4\lz4-1.9.3\lib\lz4.h</td></tr>
+<tr><td>115</td><td>1</td><td>no</td><td>T:\fastbuild\Code\Core\Reflection\MetaData\Meta_File.h</td></tr>
+<tr><td>115</td><td>1</td><td>no</td><td>T:\fastbuild\External\VSProjTypeExtractor\VSProjLoaderInterface.h</td></tr>
+<tr><td>115</td><td>1</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\Psapi.h</td></tr>
+<tr><td>115</td><td>1</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\stdlib.h</td></tr>
+<tr><td>115</td><td>1</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\corecrt_search.h</td></tr>
+<tr><td>115</td><td>1</td><td>no</td><td>T:\fastbuild\Code\Core\Reflection\MetaData\Meta_Optional.h</td></tr>
+<tr><td>115</td><td>1</td><td>no</td><td>T:\fastbuild\Code\Tools\FBuild\FBuildCore\Helpers\CtrlCHandler.h</td></tr>
+<tr><td>115</td><td>1</td><td>no</td><td>T:\fastbuild\Code\Core\Strings\LevenshteinDistance.h</td></tr>
+<tr><td>115</td><td>1</td><td>no</td><td>T:\fastbuild\Code\Core\Mem\SmallBlockAllocator.h</td></tr>
+<tr><td>115</td><td>1</td><td>no</td><td>T:\fastbuild\Code\Core\Math\Random.h</td></tr>
+<tr><td>115</td><td>1</td><td>no</td><td>T:\fastbuild\Code\Core\Network\Network.h</td></tr>
+<tr><td>115</td><td>1</td><td>no</td><td>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.34.31933\include\stdint.h</td></tr>
+<tr><td>115</td><td>1</td><td>no</td><td>T:\fastbuild\Code\Core\Reflection\MetaData\Meta_Hidden.h</td></tr>
+<tr><td>115</td><td>1</td><td>no</td><td>C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\corecrt_wstdlib.h</td></tr>
+<tr><td>115</td><td>1</td><td>no</td><td>T:\fastbuild\External\LZ4\lz4-1.9.3\lib\lz4hc.h</td></tr>
+</table>
+</details>
+</table>
+<br><br><br>
+</body>
+</html>

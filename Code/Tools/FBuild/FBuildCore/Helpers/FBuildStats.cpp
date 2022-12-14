@@ -77,9 +77,11 @@ void FBuildStats::OnBuildStop( Node * node )
         // detailed build report
         if ( generateReport )
         {
-            Report r;
-            r.Generate( *this );
-            r.Save();
+            Report* report = options.GetReport();
+
+            //HtmlReport r;
+            report->Generate( *this );
+            report->Save();
         }
 
         // stdout summary

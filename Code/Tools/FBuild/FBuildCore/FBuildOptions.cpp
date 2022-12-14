@@ -7,6 +7,7 @@
 #include "FBuildOptions.h"
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
+#include "Tools/FBuild/FBuildCore/Helpers/HtmlReport.h"
 
 // Core
 #include "Core/Env/Env.h"
@@ -350,9 +351,26 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_ShowVerbose = false;
                 continue;
             }
-            else if ( thisArg == "-report" )
+            //else if ( thisArg == "-report" )
+            else if (thisArg.BeginsWith("-report"))
             {
+                Array<AString> reportTokens;
+                thisArg.Tokenize(reportTokens, '=');
+
+                // if there is something after the '=' sign, then we take whatever comes after as the report type
+                if (reportTokens.GetSize() > 1) 
+                {
+                    m_ReportType = reportTokens[1];
+                }
+                else
+                {
+                    // default report type if nothing specified
+                    m_ReportType = "html";
+                }
+
                 m_GenerateReport = true;
+                m_ReportType.ToLower();
+
                 continue;
             }
             else if ( thisArg == "-showcmds" )
@@ -580,6 +598,23 @@ void FBuildOptions::SetWorkingDir( const AString & path )
     m_ProcessMutexName.Format( "Global\\FASTBuild-0x%08x", m_WorkingDirHash );
     m_FinalProcessMutexName.Format( "Global\\FASTBuild_Final-0x%08x", m_WorkingDirHash );
     m_SharedMemoryName.Format( "FASTBuildSharedMemory_%08x", m_WorkingDirHash );
+}
+
+
+Report* FBuildOptions::GetReport() const
+{
+    if (m_ReportType == "json")
+    {
+        //return FNEW(JsonReport());
+        //return std::make_unique<JsonReport>();
+    }
+    else if (m_ReportType == "html")
+    {
+        //return std::make_unique<HtmlReport>();
+    }
+
+    OUTPUT("FBuild: Warning: Invalid report type for '-report' argument. Defaulting to html\n");
+    return FNEW(HtmlReport);
 }
 
 // DisplayHelp
