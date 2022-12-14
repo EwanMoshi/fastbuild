@@ -1,10 +1,9 @@
-// HtmlReport - Build HtmlReport Generator
+// JsonReport - Build JsonReport Generator
 //------------------------------------------------------------------------------
 #pragma once
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Core/Containers/Array.h"
 #include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Mem/MemPoolBlock.h"
 #include "Core/Strings/AString.h"
@@ -17,21 +16,19 @@ struct FBuildStats;
 class Dependencies;
 class Node;
 
-// HtmlReport
+// JsonReport
 //------------------------------------------------------------------------------
-class HtmlReport : public Report
+class JsonReport : public Report
 {
 public:
-    HtmlReport();
-    ~HtmlReport();
+    JsonReport();
+    ~JsonReport();
 
     virtual void Generate( const FBuildStats & stats ) override;
     virtual void Save() const override;
 
 private:
-    // HtmlReport sections
-    void CreateHeader();
-    void CreateTitle();
+    // JsonReport sections
     void CreateOverview( const FBuildStats & stats );
     void DoCacheStats( const FBuildStats & stats );
     void DoCPUTimeByType( const FBuildStats & stats );
@@ -91,7 +88,6 @@ private:
     void DoTableStart( uint32_t width = DEFAULT_TABLE_WIDTH, const char * id = nullptr, bool hidden = false );
     void DoTableStop();
     void DoToggleSection( size_t numMore = 0 );
-    void DoSectionTitle( const char * sectionName, const char * sectionId );
     void DoPieChart( const Array< PieItem > & items, const char * units );
 
     // Helper to format some text
@@ -100,9 +96,6 @@ private:
     // gather stats
     void GetIncludeFilesRecurse( IncludeStatsMap & incStats, const Node * node) const;
     void AddInclude( IncludeStatsMap & incStats, const Node * node, const Node * parentNode) const;
-
-    // intermediate collected data
-    uint32_t m_NumPieCharts;
 
     // final output
     AString m_Output;

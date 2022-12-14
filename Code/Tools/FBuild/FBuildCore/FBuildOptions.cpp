@@ -8,6 +8,7 @@
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
 #include "Tools/FBuild/FBuildCore/FLog.h"
 #include "Tools/FBuild/FBuildCore/Helpers/HtmlReport.h"
+#include "Tools/FBuild/FBuildCore/Helpers/JsonReport.h"
 
 // Core
 #include "Core/Env/Env.h"
@@ -605,16 +606,15 @@ Report* FBuildOptions::GetReport() const
 {
     if (m_ReportType == "json")
     {
-        //return FNEW(JsonReport());
-        //return std::make_unique<JsonReport>();
+        return FNEW(JsonReport());
     }
     else if (m_ReportType == "html")
     {
-        //return std::make_unique<HtmlReport>();
+        return FNEW(HtmlReport);
     }
 
-    OUTPUT("FBuild: Warning: Invalid report type for '-report' argument. Defaulting to html\n");
-    return FNEW(HtmlReport);
+    OUTPUT("FBuild: Warning: Invalid report type '%s' for '-report' argument. Defaulting to html\n", m_ReportType);
+    return FNEW(JsonReport);
 }
 
 // DisplayHelp

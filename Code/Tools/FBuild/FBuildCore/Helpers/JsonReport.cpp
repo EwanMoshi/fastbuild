@@ -1,9 +1,9 @@
-// HtmlReport
+// JsonReport
 //------------------------------------------------------------------------------
 
 // Includes
 //------------------------------------------------------------------------------
-#include "HtmlReport.h"
+#include "JsonReport.h"
 
 // FBuild
 #include "Tools/FBuild/FBuildCore/FBuild.h"
@@ -21,49 +21,47 @@
 #include <string.h>
 #include <time.h>
 
+#include "JSON.h"
+
 //// Globals
 ////------------------------------------------------------------------------------
-uint32_t g_ReportNodeColors[] = {
-                                  0x000000, // PROXY_NODE (never seen)
-                                  0xFFFFFF, // COPY_FILE_NODE
-                                  0xAAAAAA, // DIRECTORY_LIST_NODE
-                                  0x000000, // EXEC_NODE
-                                  0x888888, // FILE_NODE
-                                  0x88FF88, // LIBRARY_NODE
-                                  0xFF8888, // OBJECT_NODE
-                                  0x228B22, // ALIAS_NODE
-                                  0xFFFF88, // EXE_NODE
-                                  0x88AAFF, // UNITY_NODE
-                                  0x88CCFF, // CS_NODE
-                                  0xFFAAFF, // TEST_NODE
-                                  0xDDA0DD, // COMPILER_NODE
-                                  0xFFCC88, // DLL_NODE
-                                  0xFFFFFF, // VCXPROJ_NODE
-                                  0x444444, // OBJECT_LIST_NODE
-                                  0x000000, // COPY_DIR_NODE (never seen)
-                                  0xFF3030, // REMOVE_DIR_NODE
-                                  0x77DDAA, // SLN_NODE
-                                  0x77DDAA, // XCODEPROJECT_NODE
-                                  0x000000, // SETTINGS_NODE (never seen)
-                                  0xFFFFFF, // VSPROJEXTERNAL_NODE
-                                  0xFFFFFF, // TEXT_FILE_NODE
-                                  0xEBABCB, // DIRECTORY_LIST_NODE
-                                };
-
+//uint32_t g_ReportNodeColors[] = {
+//                                  0x000000, // PROXY_NODE (never seen)
+//                                  0xFFFFFF, // COPY_FILE_NODE
+//                                  0xAAAAAA, // DIRECTORY_LIST_NODE
+//                                  0x000000, // EXEC_NODE
+//                                  0x888888, // FILE_NODE
+//                                  0x88FF88, // LIBRARY_NODE
+//                                  0xFF8888, // OBJECT_NODE
+//                                  0x228B22, // ALIAS_NODE
+//                                  0xFFFF88, // EXE_NODE
+//                                  0x88AAFF, // UNITY_NODE
+//                                  0x88CCFF, // CS_NODE
+//                                  0xFFAAFF, // TEST_NODE
+//                                  0xDDA0DD, // COMPILER_NODE
+//                                  0xFFCC88, // DLL_NODE
+//                                  0xFFFFFF, // VCXPROJ_NODE
+//                                  0x444444, // OBJECT_LIST_NODE
+//                                  0x000000, // COPY_DIR_NODE (never seen)
+//                                  0xFF3030, // REMOVE_DIR_NODE
+//                                  0x77DDAA, // SLN_NODE
+//                                  0x77DDAA, // XCODEPROJECT_NODE
+//                                  0x000000, // SETTINGS_NODE (never seen)
+//                                  0xFFFFFF, // VSPROJEXTERNAL_NODE
+//                                  0xFFFFFF, // TEXT_FILE_NODE
+//                                  0xEBABCB, // DIRECTORY_LIST_NODE
+//                                };
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-HtmlReport::HtmlReport()
+JsonReport::JsonReport()
     : Report( 512, true )
-    , m_NumPieCharts( 0 )
 {
-    // Compile time check to ensure color vector is in sync
-    static_assert( sizeof( g_ReportNodeColors ) / sizeof (uint32_t) == Node::NUM_NODE_TYPES, "g_ReportNodeColors item count doesn't match NUM_NODE_TYPES" );
 }
 
 // DESTRUCTOR
 //------------------------------------------------------------------------------
-HtmlReport::~HtmlReport()
+JsonReport::~JsonReport()
 {
     const LibraryStats * const * end = m_LibraryStats.End();
     for ( LibraryStats ** it=m_LibraryStats.Begin(); it != end; ++it )
@@ -74,7 +72,7 @@ HtmlReport::~HtmlReport()
 
 // Generate
 //------------------------------------------------------------------------------
-void HtmlReport::Generate( const FBuildStats & stats )
+void JsonReport::Generate( const FBuildStats & stats )
 {
     const Timer t;
 
@@ -83,192 +81,48 @@ void HtmlReport::Generate( const FBuildStats & stats )
     m_Output.SetLength( 0 );
 
     // generate some common data used in reporting
-    GetLibraryStats( stats );
+    m_Output += "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-2,\"tid\":0,\"args\":{\"name\":\"Memory Usage\"}},";
 
-    // build the report
-    CreateHeader();
-
-    CreateTitle();
-
-    CreateOverview( stats );
-
-    DoCPUTimeByType( stats );
-    DoCacheStats( stats );
-    DoCPUTimeByLibrary();
-    DoCPUTimeByItem( stats );
-
-    DoIncludes();
-
-    CreateFooter();
+    // probably don't need this
+    // JSON::Escape(m_Output);
+    
+    //GetLibraryStats( stats );
+    //
+    // // build the report
+    // CreateOverview( stats );
+    //
+    // DoCPUTimeByType( stats );
+    // DoCacheStats( stats );
+    // DoCPUTimeByLibrary();
+    // DoCPUTimeByItem( stats );
+    //
+    // DoIncludes();
+    //
+    // CreateFooter();
 
     // patch in time take
-    const float time = t.GetElapsed();
-    AStackString<> timeTakenBuffer;
-    stats.FormatTime( time, timeTakenBuffer );
-    char * placeholder = m_Output.Find( "^^^^    " );
-    memcpy( placeholder, timeTakenBuffer.Get(), timeTakenBuffer.GetLength() );
-
+    //const float time = t.GetElapsed();
+    //AStackString<> timeTakenBuffer;
+    //stats.FormatTime( time, timeTakenBuffer );
+    //char * placeholder = m_Output.Find( "^^^^    " );
+    //memcpy( placeholder, timeTakenBuffer.Get(), timeTakenBuffer.GetLength() );
 }
 
 // Save
 //------------------------------------------------------------------------------
-void HtmlReport::Save() const
+void JsonReport::Save() const
 {
     FileStream f;
-    if ( f.Open( "report.html", FileStream::WRITE_ONLY ) )
+    if ( f.Open( "report.json", FileStream::WRITE_ONLY ) )
     {
         f.Write( m_Output.Get(), m_Output.GetLength() );
     }
 }
 
-// CreateHeader
-//------------------------------------------------------------------------------
-void HtmlReport::CreateHeader()
-{
-    const char * header =
-        "<!doctype html>\n"
-        "<style type=\"text/css\">\n"
-        "body{\n"
-        "font-family:arial;\n"
-        "width:1000px;\n"
-        "margin:0 auto;\n"
-        "font-size:13px\n"
-        "}\n"
-        "th{\n"
-        "background-color:#e0e0e0;\n"
-        "padding:4px;\n"
-        "height:15px;\n"
-        "text-align:left;\n"
-        "border-top-left-radius:5px;\n"
-        "-moz-border-radius-topleft:5px;\n"
-        "border-top-right-radius:5px;\n"
-        "-moz-border-radius-topright:5px;\n"
-        "font-weight:bold;\n"
-        "}\n"
-        "tr:nth-child(odd){\n"
-        "background-color:#f0f0f0;\n"
-        "}\n"
-        "h1{\n"
-        "background-color:#b0b0b0;\n"
-        "border-radius:5px;\n"
-        "padding:4px;\n"
-        "height:40px;\n"
-        "text-align:left;\n"
-        "font-weight:bold;\n"
-        "}\n"
-        "h2{\n"
-        "background-color:#d0d0d0;\n"
-        "border-radius:5px;\n"
-        "padding:4px;\n"
-        "height:27px;\n"
-        "text-align:left;\n"
-        "font-weight:bold;\n"
-        "}\n"
-        "table{\n"
-        "  padding-left:10px;\n"
-        "}\n"
-        "td\n"
-        "word-break:break-all;\n"
-        "padding:3px;\n"
-        "}\n"
-        ".perc{\n"
-        "color:#aaaaaa;\n"
-        "font-size:10px\n"
-        "}\n"
-        "</style>\n"
-
-        "<html>\n"
-        "<head>\n"
-        "<meta charset=\"UTF-8\" />\n"
-        "<title>FASTBuild Report</title>\n"
-        "</head>\n"
-        "<body>\n"
-        "<script type=\"text/javascript\">\n"
-        "function getTotal(data)\n"
-        "{\n"
-        " var total = 0;\n"
-        " for (var j = 0; j < data.length; j++)\n"
-        " {\n"
-        "  total += (typeof data[j] == 'number') ? data[j] : 0;\n"
-        " }\n"
-        " return total;\n"
-        "}\n"
-        "function plotData(canvasName,myData,myLabels,myColor, units)\n"
-        "{\n"
-        " var canvas;\n"
-        " var ctx;\n"
-        " var lastend = 0;\n"
-        " var myTotal = getTotal(myData);\n"
-
-        " canvas = document.getElementById(canvasName);\n"
-        " ctx = canvas.getContext(\"2d\");\n"
-        " ctx.clearRect(0, 0, canvas.width, canvas.height);\n"
-
-        " ctx.fillStyle = \"black\";\n"
-        " ctx.beginPath();\n"
-        " ctx.moveTo(70,70);\n"
-        " ctx.arc(70,70,66,0,(Math.PI*2),false);\n"
-        " ctx.lineTo(70,70);\n"
-        " ctx.fill();\n"
-
-        " for (var i = 0; i < myData.length; i++)\n"
-        " {\n"
-        "  ctx.fillStyle = myColor[i];\n"
-        "  ctx.beginPath();\n"
-        "  ctx.moveTo(70,70);\n"
-        "  ctx.arc(70,70,65,lastend,lastend+(Math.PI*2*(myData[i]/myTotal)),false);\n"
-        "  ctx.lineTo(70,70);\n"
-        "  ctx.fill();\n"
-        "  lastend += Math.PI*2*(myData[i]/myTotal);\n"
-        " }\n"
-
-        // legend
-        " for (var i = 0; i < myData.length; i++)\n"
-        " {\n"
-        "  var y = 20 + ( i * 25 );\n"
-
-        // color box
-        "  ctx.fillStyle=\"#888888\";\n"
-        "  ctx.fillRect(200-1,y-15-1,22,22)\n"
-        "  ctx.fillStyle=myColor[ i ];\n"
-        "  ctx.fillRect(200,y-15,20,20)\n"
-
-        // text
-        "  ctx.fillStyle = \"black\";\n"
-        "  ctx.font = \"16px Arial\";\n"
-        "  ctx.fillText(myLabels[ i ], 230, y );\n"
-
-        // value
-        "  var perc = ( 100.0 * myData[ i ] / myTotal ).toFixed(1);\n"
-        "  ctx.fillText( perc + \"% (\" + myData[ i ] + units + \")\", 330, y );\n"
-        " }\n"
-        "}\n"
-
-        // toggleTable
-        "function toggleTable(tableName)\n"
-        "{\n"
-        " var table = document.getElementById(tableName);\n"
-        " table.style.display = (table.style.display == \"table\") ? \"none\" : \"table\";\n"
-        "}\n"
-
-        "</script>\n";
-    m_Output += header;
-}
-
-// CreateTitle
-//------------------------------------------------------------------------------
-void HtmlReport::CreateTitle()
-{
-
-    Write( "<h1>FASTBuild Report</h1>\n" );
-}
-
 // CreateOverview
 //------------------------------------------------------------------------------
-void HtmlReport::CreateOverview( const FBuildStats & stats )
+void JsonReport::CreateOverview( const FBuildStats & stats )
 {
-    DoSectionTitle( "Overview", "overview" );
-
     AStackString<> buffer;
 
     DoTableStart();
@@ -355,11 +209,11 @@ void HtmlReport::CreateOverview( const FBuildStats & stats )
 
 // DoCacheStats
 //------------------------------------------------------------------------------
-void HtmlReport::DoCacheStats( const FBuildStats & stats )
+void JsonReport::DoCacheStats( const FBuildStats & stats )
 {
     (void)stats;
 
-    DoSectionTitle( "Cache Stats", "cacheStats" );
+    //DoSectionTitle( "Cache Stats", "cacheStats" );
 
     const FBuildOptions & options = FBuild::Get().GetOptions();
     if ( options.m_UseCacheRead || options.m_UseCacheWrite )
@@ -462,9 +316,9 @@ void HtmlReport::DoCacheStats( const FBuildStats & stats )
 
 // DoCPUTimeByType
 //------------------------------------------------------------------------------
-void HtmlReport::DoCPUTimeByType( const FBuildStats & stats )
+void JsonReport::DoCPUTimeByType( const FBuildStats & stats )
 {
-    DoSectionTitle( "CPU Time by Node Type", "cpuTimeByNodeType" );
+    //DoSectionTitle( "CPU Time by Node Type", "cpuTimeByNodeType" );
 
     // Summary Pie Chart
     Array< PieItem > items( 32, true );
@@ -480,9 +334,9 @@ void HtmlReport::DoCPUTimeByType( const FBuildStats & stats )
         // label
         const char * typeName = Node::GetTypeName( Node::Type( i ) );
         const float value = (float)( (double)nodeStats.m_ProcessingTimeMS / (double)1000 );
-        const uint32_t color = g_ReportNodeColors[ i ];
+        //const uint32_t color = g_ReportNodeColors[ i ];
 
-        items.EmplaceBack( typeName, value, color, (void *)i );
+        //items.EmplaceBack( typeName, value, color, (void *)i );
     }
 
     items.Sort();
@@ -529,12 +383,12 @@ void HtmlReport::DoCPUTimeByType( const FBuildStats & stats )
 
 // DoCPUTimeByItem
 //------------------------------------------------------------------------------
-void HtmlReport::DoCPUTimeByItem( const FBuildStats & stats )
+void JsonReport::DoCPUTimeByItem( const FBuildStats & stats )
 {
     const FBuildOptions & options = FBuild::Get().GetOptions();
     const bool cacheEnabled = ( options.m_UseCacheRead || options.m_UseCacheWrite );
 
-    DoSectionTitle("CPU Time by Item", "cpuTimeByItem");
+    //DoSectionTitle("CPU Time by Item", "cpuTimeByItem");
 
     DoTableStart();
 
@@ -588,9 +442,9 @@ void HtmlReport::DoCPUTimeByItem( const FBuildStats & stats )
 
 // DoCPUTimeByLibrary
 //------------------------------------------------------------------------------
-void HtmlReport::DoCPUTimeByLibrary()
+void JsonReport::DoCPUTimeByLibrary()
 {
-    DoSectionTitle( "CPU Time by Library", "cpuTimeByLibrary" );
+    //DoSectionTitle( "CPU Time by Library", "cpuTimeByLibrary" );
 
     DoTableStart();
 
@@ -657,9 +511,9 @@ void HtmlReport::DoCPUTimeByLibrary()
 // DoIncludes
 //------------------------------------------------------------------------------
 PRAGMA_DISABLE_PUSH_MSVC( 6262 ) // warning C6262: Function uses '262212' bytes of stack
-void HtmlReport::DoIncludes()
+void JsonReport::DoIncludes()
 {
-    DoSectionTitle( "Includes", "includes" );
+    //DoSectionTitle( "Includes", "includes" );
 
     size_t numLibsOutput = 0;
 
@@ -741,17 +595,17 @@ PRAGMA_DISABLE_POP_MSVC // warning C6262: Function uses '262212' bytes of stack
 
 // DoPieChart
 //------------------------------------------------------------------------------
-void HtmlReport::DoPieChart( const Array< PieItem > & items, const char * units )
+void JsonReport::DoPieChart( const Array< PieItem > & items, const char * units )
 {
     AStackString<> buffer;
 
     const uint32_t height = Math::Max< uint32_t >( 140, 40 + 25 * (uint32_t)items.GetSize() );
 
-    m_NumPieCharts++;
+    //m_NumPieCharts++;
 
     Write( "<section>\n" );
     Write( "<div>\n" );
-    Write( "<canvas id=\"canvas%u\" width=\"500\" height=\"%u\">\n", m_NumPieCharts, height );
+    //Write( "<canvas id=\"canvas%u\" width=\"500\" height=\"%u\">\n", m_NumPieCharts, height );
     Write( "HTML5 Canvas support required.\n" );
     Write( "</canvas>\n" );
     Write( "</div>\n" );
@@ -789,14 +643,14 @@ void HtmlReport::DoPieChart( const Array< PieItem > & items, const char * units 
     }
     Write( "];\n" );
 
-    Write( "    plotData(\"canvas%u\",myData,myLabels,myColors,\"%s\");\n", m_NumPieCharts, units );
+    //Write( "    plotData(\"canvas%u\",myData,myLabels,myColors,\"%s\");\n", m_NumPieCharts, units );
     Write( "</script>\n" );
     Write( "</section>\n" );
 }
 
 // CreateFooter
 //------------------------------------------------------------------------------
-void HtmlReport::CreateFooter()
+void JsonReport::CreateFooter()
 {
     const char * footer =
         "<br><br><br>\n"
@@ -805,16 +659,9 @@ void HtmlReport::CreateFooter()
     m_Output += footer;
 }
 
-// DoSectionTitle
-//------------------------------------------------------------------------------
-void HtmlReport::DoSectionTitle( const char * sectionName, const char * sectionId )
-{
-    Write( "<h2 id=\"%s\">%s</h2>\n", sectionId, sectionName );
-}
-
 // DoTableStart
 //------------------------------------------------------------------------------
-void HtmlReport::DoTableStart( uint32_t width, const char * id, bool hidden )
+void JsonReport::DoTableStart( uint32_t width, const char * id, bool hidden )
 {
     AStackString<> output;
     output.Format( "<table width=%u", width );
@@ -834,14 +681,14 @@ void HtmlReport::DoTableStart( uint32_t width, const char * id, bool hidden )
 
 // DoTableStop
 //------------------------------------------------------------------------------
-void HtmlReport::DoTableStop()
+void JsonReport::DoTableStop()
 {
     Write( "</table>\n" );
 }
 
 // DoToggleSection
 //------------------------------------------------------------------------------
-void HtmlReport::DoToggleSection( size_t numMore )
+void JsonReport::DoToggleSection( size_t numMore )
 {
     static uint32_t tableId = 0;
     ++tableId;
@@ -860,7 +707,7 @@ void HtmlReport::DoToggleSection( size_t numMore )
 
 // Write
 //------------------------------------------------------------------------------
-void HtmlReport::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
+void JsonReport::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
 {
     AStackString< 1024 > tmp;
 
@@ -878,9 +725,11 @@ void HtmlReport::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
     m_Output += tmp;
 }
 
+
+
 // GetIncludeFilesRecurse
 //------------------------------------------------------------------------------
-void HtmlReport::GetIncludeFilesRecurse( IncludeStatsMap & incStats, const Node * node ) const
+void JsonReport::GetIncludeFilesRecurse( IncludeStatsMap & incStats, const Node * node ) const
 {
     const Node::Type type = node->GetType();
     if ( type == Node::OBJECT_NODE )
@@ -915,7 +764,7 @@ void HtmlReport::GetIncludeFilesRecurse( IncludeStatsMap & incStats, const Node 
 
 // AddInclude
 //------------------------------------------------------------------------------
-void HtmlReport::AddInclude( IncludeStatsMap & incStats, const Node * node, const Node * parentNode ) const
+void JsonReport::AddInclude( IncludeStatsMap & incStats, const Node * node, const Node * parentNode ) const
 {
     bool isHeaderInPCH = false;
     if ( parentNode->GetType() == Node::OBJECT_NODE )
@@ -937,7 +786,7 @@ void HtmlReport::AddInclude( IncludeStatsMap & incStats, const Node * node, cons
 
 // IncludeStatsMap (CONSTRUCTOR)
 //------------------------------------------------------------------------------
-HtmlReport::IncludeStatsMap::IncludeStatsMap()
+JsonReport::IncludeStatsMap::IncludeStatsMap()
     : m_Pool( sizeof( IncludeStats ), __alignof( IncludeStats ) )
 {
     memset( m_Table, 0, sizeof( m_Table ) );
@@ -945,7 +794,7 @@ HtmlReport::IncludeStatsMap::IncludeStatsMap()
 
 // IncludeStatsMap (DESTRUCTOR)
 //------------------------------------------------------------------------------
-HtmlReport::IncludeStatsMap::~IncludeStatsMap()
+JsonReport::IncludeStatsMap::~IncludeStatsMap()
 {
     for ( size_t i=0; i<65536; ++i )
     {
@@ -961,7 +810,7 @@ HtmlReport::IncludeStatsMap::~IncludeStatsMap()
 
 // Find
 //------------------------------------------------------------------------------
-HtmlReport::IncludeStats * HtmlReport::IncludeStatsMap::Find( const Node * node ) const
+JsonReport::IncludeStats * JsonReport::IncludeStatsMap::Find( const Node * node ) const
 {
     // caculate table entry
     const uint32_t hash = node->GetNameCRC();
@@ -984,7 +833,7 @@ HtmlReport::IncludeStats * HtmlReport::IncludeStatsMap::Find( const Node * node 
 
 // Insert
 //------------------------------------------------------------------------------
-HtmlReport::IncludeStats * HtmlReport::IncludeStatsMap::Insert( const Node * node )
+JsonReport::IncludeStats * JsonReport::IncludeStatsMap::Insert( const Node * node )
 {
     // caculate table entry
     const uint32_t hash = node->GetNameCRC();
@@ -1003,7 +852,7 @@ HtmlReport::IncludeStats * HtmlReport::IncludeStatsMap::Insert( const Node * nod
 
 // Flatten
 //------------------------------------------------------------------------------
-void HtmlReport::IncludeStatsMap::Flatten( Array< const IncludeStats * > & stats ) const
+void JsonReport::IncludeStatsMap::Flatten( Array< const IncludeStats * > & stats ) const
 {
     for ( size_t i=0; i<65536; ++i )
     {

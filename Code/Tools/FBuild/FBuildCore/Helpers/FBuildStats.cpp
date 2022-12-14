@@ -82,6 +82,8 @@ void FBuildStats::OnBuildStop( Node * node )
             //HtmlReport r;
             report->Generate( *this );
             report->Save();
+
+            FREE(report);
         }
 
         // stdout summary
