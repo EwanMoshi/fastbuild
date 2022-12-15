@@ -95,7 +95,7 @@ void JsonReport::Generate( const FBuildStats & stats )
     Write(",\n\t");
 
     DoCPUTimeByType( stats );
-    Write("\n\t");
+    Write(",\n\t");
 
     DoCacheStats( stats );
     Write(",\n\t");
@@ -112,11 +112,11 @@ void JsonReport::Generate( const FBuildStats & stats )
     // CreateFooter();
 
     // patch in time take
-    //const float time = t.GetElapsed();
-    //AStackString<> timeTakenBuffer;
-    //stats.FormatTime( time, timeTakenBuffer );
-    //char * placeholder = m_Output.Find( "^^^^    " );
-    //memcpy( placeholder, timeTakenBuffer.Get(), timeTakenBuffer.GetLength() );
+    const float time = t.GetElapsed();
+    AStackString<> timeTakenBuffer;
+    stats.FormatTime( time, timeTakenBuffer );
+    char * placeholder = m_Output.Find( "^^^^    " );
+    memcpy( placeholder, timeTakenBuffer.Get(), timeTakenBuffer.GetLength() );
 }
 
 // Save
@@ -149,8 +149,9 @@ void JsonReport::CreateOverview( const FBuildStats & stats )
         const char * commandLine = commandLineBuffer.Get();
     #endif
 
-    //Write( "<tr><td width=80>Cmd Line Options</td><td>%s</td></tr>", commandLine );
-    Write( "\"cmd line options\": \"%s\"\n\t\t\t", commandLine );
+    AStackString<> programName(commandLine);
+    JSON::Escape(programName);
+    Write( "\"cmd line options\": \"%s\"\n\t\t\t", programName.Get() );
 
     // Target
     AStackString<> targets;
