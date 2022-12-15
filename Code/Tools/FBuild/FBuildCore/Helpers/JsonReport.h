@@ -36,24 +36,20 @@ private:
     void DoCPUTimeByLibrary();
     void DoIncludes();
 
-    void CreateFooter();
-
-    struct PieItem
+    struct NodeTypeTiming
     {
-        PieItem( const char * l, float v, uint32_t c, void * u = nullptr )
+        NodeTypeTiming( const char * l, float v, void * u = nullptr )
             : label( l )
             , value( v )
-            , color( c )
             , userData( u )
         {
         }
 
         const char *    label;
         float           value;
-        uint32_t        color;
         void *          userData;
 
-        bool operator < ( const PieItem & other ) const { return value > other.value; }
+        bool operator < ( const NodeTypeTiming& other ) const { return value > other.value; }
     };
     
     struct IncludeStats
@@ -82,18 +78,11 @@ private:
         MemPoolBlock m_Pool;
     };
 
-    enum { DEFAULT_TABLE_WIDTH = 990 };
-
-    // Helpers
-    void DoTableStart( uint32_t width = DEFAULT_TABLE_WIDTH, const char * id = nullptr, bool hidden = false );
-    void DoTableStop();
-    void DoToggleSection( size_t numMore = 0 );
-    void DoPieChart( const Array< PieItem > & items, const char * units );
-
     // Helper to format some text
     void Write( MSVC_SAL_PRINTF const char * fmtString, ... ) FORMAT_STRING( 2, 3 );
 
     // gather stats
+    // TODO: Extract into Report
     void GetIncludeFilesRecurse( IncludeStatsMap & incStats, const Node * node) const;
     void AddInclude( IncludeStatsMap & incStats, const Node * node, const Node * parentNode) const;
 

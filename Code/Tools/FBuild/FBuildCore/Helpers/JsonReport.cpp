@@ -81,23 +81,34 @@ void JsonReport::Generate( const FBuildStats & stats )
     m_Output.SetLength( 0 );
 
     // generate some common data used in reporting
-    m_Output += "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-2,\"tid\":0,\"args\":{\"name\":\"Memory Usage\"}},";
+    //m_Output += "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-2,\"tid\":0,\"args\":{\"name\":\"Memory Usage\"}},";
 
     // probably don't need this
     // JSON::Escape(m_Output);
     
-    //GetLibraryStats( stats );
-    //
-    // // build the report
-    // CreateOverview( stats );
-    //
-    // DoCPUTimeByType( stats );
-    // DoCacheStats( stats );
-    // DoCPUTimeByLibrary();
-    // DoCPUTimeByItem( stats );
-    //
-    // DoIncludes();
-    //
+    GetLibraryStats( stats );
+    
+    Write("{\n\t");
+
+    // build the report
+    CreateOverview( stats );
+    Write(",\n\t");
+
+    DoCPUTimeByType( stats );
+    Write("\n\t");
+
+    DoCacheStats( stats );
+    Write(",\n\t");
+
+    DoCPUTimeByLibrary();
+    Write(",\n\t");
+
+    DoCPUTimeByItem( stats );
+    Write(",\n\t");
+
+    DoIncludes();
+    Write("\n}");
+
     // CreateFooter();
 
     // patch in time take
@@ -125,10 +136,8 @@ void JsonReport::CreateOverview( const FBuildStats & stats )
 {
     AStackString<> buffer;
 
-    DoTableStart();
-
-    // Headings
-    Write( "<tr><th width=150>Item</th><th>Details</th></tr>\n" );
+    Write("\"Overview\": {\n");
+    Write("\t\t\t");
 
     // Full command line
     AStackString<> commandLineBuffer;
@@ -139,7 +148,9 @@ void JsonReport::CreateOverview( const FBuildStats & stats )
     #else
         const char * commandLine = commandLineBuffer.Get();
     #endif
-    Write( "<tr><td width=80>Cmd Line Options</td><td>%s</td></tr>", commandLine );
+
+    //Write( "<tr><td width=80>Cmd Line Options</td><td>%s</td></tr>", commandLine );
+    Write( "\"cmd line options\": \"%s\"\n\t\t\t", commandLine );
 
     // Target
     AStackString<> targets;
@@ -162,31 +173,38 @@ void JsonReport::CreateOverview( const FBuildStats & stats )
             targets += child->GetName();
         }
     }
-    Write( "<tr><td>Target(s)</td><td>%s</td></tr>\n", targets.Get() );
+    //Write( "<tr><td>Target(s)</td><td>%s</td></tr>\n", targets.Get() );
+    Write( "\"Target(s)\": \"%s\"\n\t\t\t", targets.Get() );
 
     // Result
     const bool buildOK = ( stats.GetRootNode()->GetState() == Node::UP_TO_DATE );
-    Write( "<tr><td>Result</td><td>%s</td></tr>\n", buildOK ? "OK" : "FAILED" );
+    //Write( "<tr><td>Result</td><td>%s</td></tr>\n", buildOK ? "OK" : "FAILED" );
+    Write("\"Result\": \"%s\"\n\t\t\t", buildOK ? "OK" : "FAILED" );
 
     // Real Time
     const float totalBuildTime = stats.m_TotalBuildTime;
     stats.FormatTime( totalBuildTime, buffer );
-    Write( "<tr><td>Time</td><td>%s</td></tr>\n", buffer.Get() );
+    //Write( "<tr><td>Time</td><td>%s</td></tr>\n", buffer.Get() );
+    Write("\"Time\": \"%s\"\n\t\t\t", buffer.Get() );
 
     // Local CPU Time
     const float totalLocalCPUInSeconds = (float)( (double)stats.m_TotalLocalCPUTimeMS / (double)1000 );
     stats.FormatTime( totalLocalCPUInSeconds, buffer );
     const float localRatio = ( totalLocalCPUInSeconds / totalBuildTime );
-    Write( "<tr><td>CPU Time</td><td>%s (%2.1f:1)</td></tr>\n", buffer.Get(), (double)localRatio );
+    //Write( "<tr><td>CPU Time</td><td>%s (%2.1f:1)</td></tr>\n", buffer.Get(), (double)localRatio );
+    Write("\"CPU Time\": \"%s (%2.1f:1)\"\n\t\t\t", buffer.Get(), (double)localRatio );
+
 
     // Remote CPU Time
     const float totalRemoteCPUInSeconds = (float)( (double)stats.m_TotalRemoteCPUTimeMS / (double)1000 );
     stats.FormatTime( totalRemoteCPUInSeconds, buffer );
     const float remoteRatio = ( totalRemoteCPUInSeconds / totalBuildTime );
-    Write( "<tr><td>Remote CPU Time</td><td>%s (%2.1f:1)</td></tr>\n", buffer.Get(), (double)remoteRatio );
+    //Write( "<tr><td>Remote CPU Time</td><td>%s (%2.1f:1)</td></tr>\n", buffer.Get(), (double)remoteRatio );
+    Write("\"Remote CPU Time\": \"%s (%2.1f:1)\"\n\t\t\t", buffer.Get(), (double)remoteRatio);
 
     // version info
-    Write( "<tr><td>Version</td><td>%s %s</td></tr>\n", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM );
+    //Write( "<tr><td>Version</td><td>%s %s</td></tr>\n", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM );
+    Write("\"Version\": \"%s %s\"\n\t\t\t", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM);
 
     // report time
     time_t rawtime;
@@ -202,9 +220,113 @@ void JsonReport::CreateOverview( const FBuildStats & stats )
     VERIFY( strftime( timeBuffer, 256, "%a %d-%b-%Y - %H:%M:%S", timeinfo ) > 0 );
 
     // NOTE: leave space to patch in time taken later "^^^^                          "
-    Write( "<tr><td>Report Generated</td><td>^^^^                         - %s</td></tr>\n", timeBuffer );
+    //Write( "<tr><td>Report Generated</td><td>^^^^                         - %s</td></tr>\n", timeBuffer );
+    Write("\"Report Generated\": \"^^^^                         - %s\"\n\t", timeBuffer);
+    Write("}");
+}
 
-    DoTableStop();
+// DoCPUTimeByType
+//------------------------------------------------------------------------------
+void JsonReport::DoCPUTimeByType(const FBuildStats& stats)
+{
+    Write("\"CPU Time by Node Type\": {\n");
+    Write("\t\t");
+    Write("\"summary\": {\n\t\t\t");
+
+    // Summary for node types
+    Array< NodeTypeTiming > items(32, true);
+
+    for (size_t i = 0; i < (size_t)Node::NUM_NODE_TYPES; ++i)
+    {
+        const FBuildStats::Stats& nodeStats = stats.GetStatsFor((Node::Type)i);
+        if (nodeStats.m_NumProcessed == 0)
+        {
+            continue;
+        }
+
+        // label
+        const char* typeName = Node::GetTypeName(Node::Type(i));
+        const float value = (float)((double)nodeStats.m_ProcessingTimeMS / (double)1000);
+
+        items.EmplaceBack( typeName, value, (void *)i );
+    }
+
+    items.Sort();
+
+    // calculate total time taken for all node types
+    float total = 0.0f;
+    for (size_t i = 0; i < items.GetSize(); ++i)
+    {
+        total += items[i].value;
+    }
+
+    AStackString<> buffer;
+    for (size_t i = 0; i < items.GetSize(); ++i)
+    {
+        double percent = 100.0 * items[i].value / total;
+
+        //buffer.Format("%2.3f", (double)(items[i].value));
+        buffer.Format("\"%2.1f%%"" (% 2.3f s)\"", percent, (double)(items[i].value));
+        Write("\"%s\": %s", items[i].label, buffer.Get());
+
+        // add a comma and new line as long as we're not the last item
+        if (i < items.GetSize() - 1)
+        {
+            Write(",\n\t\t\t");
+        }
+    }
+    // end of summary section
+    Write("\n\t\t},");
+
+    // node type timing information
+    Write("\n\t\t\"details\": [\n\t\t\t");
+
+    for (size_t i = 0; i < items.GetSize(); ++i)
+    {
+        const Node::Type type = (Node::Type)(size_t)items[i].userData;
+        const FBuildStats::Stats& nodeStats = stats.GetStatsFor(type);
+        if (nodeStats.m_NumProcessed == 0)
+        {
+            continue;
+        }
+
+        const char* typeName = Node::GetTypeName(type);
+        const float value = (float)((double)nodeStats.m_ProcessingTimeMS / (double)1000);
+        const uint32_t processed = nodeStats.m_NumProcessed;
+        const uint32_t built = nodeStats.m_NumBuilt;
+        const uint32_t cacheHits = nodeStats.m_NumCacheHits;
+
+        Write("{");
+        Write("\n\t\t\t\t");
+
+        Write("\"Type\": \"%s\",\n\t\t\t\t", typeName);
+        // TODO: look into this, the time seems wrong
+        Write("\"Time (s)\": %2.3f,\n\t\t\t\t", (double)value);
+        Write("\"Processed\": %u,\n\t\t\t\t", processed);
+        Write("\"Built\": %u,\n\t\t\t\t", built);
+
+        if (type == Node::OBJECT_NODE)
+        {
+            // cacheable
+            Write("\"Cache Hits\": %u\n\t\t\t", cacheHits);
+        }
+        else
+        {
+            // non-cacheable
+            Write("\"Cache Hits\": \"-\"\n\t\t\t");
+        }
+
+        Write("}");
+
+        if (i < items.GetSize() - 1)
+        {
+            Write(",\n\t\t\t");
+        }
+    }
+
+    // end of node timing information
+    Write("\n\t\t ]");
+    Write("\n\t}");
 }
 
 // DoCacheStats
@@ -213,7 +335,7 @@ void JsonReport::DoCacheStats( const FBuildStats & stats )
 {
     (void)stats;
 
-    //DoSectionTitle( "Cache Stats", "cacheStats" );
+    Write("\"Cache Stats\": {\n");
 
     const FBuildOptions & options = FBuild::Get().GetOptions();
     if ( options.m_UseCacheRead || options.m_UseCacheWrite )
@@ -232,21 +354,42 @@ void JsonReport::DoCacheStats( const FBuildStats & stats )
         }
         if ( totalOutOfDateItems == 0 )
         {
-            Write( "No cacheable items were built.\n" );
+            // Write( "No cacheable items were built.\n" );
+            Write("\t}");
             return;
         }
         const uint32_t totalCacheMisses( totalCacheable - totalCacheHits );
 
-        Array< PieItem > pieItems( 3, false );
-        pieItems.EmplaceBack( "Uncacheable", (float)(totalOutOfDateItems - totalCacheable), (uint32_t)0xFF8888 );
-        pieItems.EmplaceBack( "Cache Miss", (float)totalCacheMisses, (uint32_t)0xFFCC88 );
-        pieItems.EmplaceBack( "Cache Hit", (float)totalCacheHits, (uint32_t)0x88FF88 );
-        DoPieChart(pieItems, "");
+        Write("\t\t");
+        Write("\"summary\": {\n\t\t\t");
 
-        DoTableStart();
+        // TODO: This probably needs a new type. NodeTypeTiming is not right here, it's more like LibraryCacheStats or CacheStats
+        // Could even consider making a generic struct like "TimingStats"
+        Array< NodeTypeTiming > items( 3, false );
+        items.EmplaceBack( "Uncacheable", (float)(totalOutOfDateItems - totalCacheable) );
+        items.EmplaceBack( "Cache Miss", (float)totalCacheMisses );
+        items.EmplaceBack( "Cache Hit", (float)totalCacheHits );
 
-        // Headings
-        Write( "<tr><th>Library</th><th style=\"width:70px;\">Items</th><th style=\"width:90px;\">Out-of-Date</th><th style=\"width:90px;\">Cacheable</th><th style=\"width:70px;\">Hits</th><th style=\"width:70px;\">Misses</th><th style=\"width:60px;\">Stores</th><th style=\"width:100px;\">Store Time</th></tr>\n" );
+        AStackString<> buffer;
+        for (size_t i = 0; i < items.GetSize(); ++i)
+        {
+            double percent = 100.0 * items[i].value / totalOutOfDateItems;
+
+            buffer.Format("\"%2.1f%%"" (%u s)\"", percent, (uint32_t)(items[i].value));
+            Write("\"%s\": %s", items[i].label, buffer.Get());
+
+            // add a comma and new line as long as we're not the last item
+            if (i < items.GetSize() - 1)
+            {
+                Write(",\n\t\t\t");
+            }
+        }
+
+        // end of summary section
+        Write("\n\t\t},");
+
+        // library stats information
+        Write("\n\t\t\"details\": [\n\t\t\t");
 
         size_t numOutput( 0 );
 
@@ -283,102 +426,105 @@ void JsonReport::DoCacheStats( const FBuildStats & stats )
             const uint32_t  cStores     = ls.objectCount_CacheStores;
             const float     cStoreTime  = (float)ls.cacheTimeMS / 1000.0f; // ms to s
 
-            // start collapsable section
-            if ( numOutput == 10 )
+            Write("{");
+            Write("\n\t\t\t\t");
+
+            Write("\"Library\": \"%s\",\n\t\t\t\t", libraryName);
+            // TODO: look into this, the time seems wrong
+            Write("\"Items\": %u,\n\t\t\t\t", items);
+            Write("\"Out-of-Date\": \"%u (%2.1f%%)\",\n\t\t\t\t", outOfDateItems, (double)outOfDateItemsPerc);
+            Write("\"Cacheable\": \"%u (%2.1f%%)\",\n\t\t\t\t", cItems, (double)cItemsPerc);
+            Write("\"Hits\": \"%u (%2.1f%%)\",\n\t\t\t\t", cHits, (double)cHitsPerc);
+            Write("\"Misses\": \"%u (%2.1f%%)\",\n\t\t\t\t", cMisses, (double)cMissesPerc);
+            Write("\"Stores\": %u,\n\t\t\t\t", cStores);
+            Write("\"Store Time (s)\": %2.3f\n\t\t\t", (double)cStoreTime);
+
+            Write("}");
+
+            if (numOutput < m_LibraryStats.GetSize() - 1)
             {
-                DoToggleSection();
+                Write(",\n\t\t\t");
             }
 
-            Write( ( numOutput == 10 ) ? "<tr></tr><tr><td>%s</td><td style=\"width:70px;\">%u</td><td style=\"width:90px;\">%u <font class='perc'>(%2.1f%%)</font></td><td style=\"width:90px;\">%u <font class='perc'>(%2.1f%%)</font></td><td style=\"width:70px;\">%u <font class='perc'>(%2.1f%%)</font></td><td style=\"width:70px;\">%u <font class='perc'>(%2.1f%%)</font></td><td style=\"width:60px;\">%u</td><td style=\"width:100px;\">%2.3fs</td></tr>\n"
-                                       : "<tr><td>%s</td><td>%u</td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u <font class='perc'>(%2.1f%%)</font></td><td>%u</td><td>%2.3fs</td></tr>\n",
-                        libraryName,
-                        items,
-                        outOfDateItems, (double)outOfDateItemsPerc,
-                        cItems, (double)cItemsPerc,
-                        cHits, (double)cHitsPerc,
-                        cMisses, (double)cMissesPerc,
-                        cStores, (double)cStoreTime );
             numOutput++;
-        }
-
-        DoTableStop();
-
-        if ( numOutput > 10 )
-        {
-            Write( "</details>\n" );
         }
     }
     else
     {
-        Write( "Cache not used.\n" );
+        Write("\t}");
     }
+
+    // end library stats
+    Write("\n\t\t ]");
+    Write("\n\t}");
 }
 
-// DoCPUTimeByType
+// DoCPUTimeByLibrary
 //------------------------------------------------------------------------------
-void JsonReport::DoCPUTimeByType( const FBuildStats & stats )
+void JsonReport::DoCPUTimeByLibrary()
 {
-    //DoSectionTitle( "CPU Time by Node Type", "cpuTimeByNodeType" );
+    Write("\"CPU Time by Library\": [\n");
+    Write("\t\t");
 
-    // Summary Pie Chart
-    Array< PieItem > items( 32, true );
-
-    for ( size_t i=0; i < (size_t)Node::NUM_NODE_TYPES; ++i )
+    // total
+    uint32_t total = 0;
+    const LibraryStats* const* end = m_LibraryStats.End();
+    for (LibraryStats** it = m_LibraryStats.Begin(); it != end; ++it)
     {
-        const FBuildStats::Stats & nodeStats = stats.GetStatsFor( (Node::Type)i );
-        if ( nodeStats.m_NumProcessed == 0 )
+        total += (*it)->cpuTimeMS;
+    }
+    if (total == 0)
+    {
+        Write("}");
+        return;
+    }
+
+    const float totalS = (float)((double)total * 0.001);
+    size_t numOutput(0);
+    // Result
+    for (LibraryStats** it = m_LibraryStats.Begin(); it != end; ++it)
+    {
+        const LibraryStats& ls = *(*it);
+        if (ls.cpuTimeMS == 0)
         {
             continue;
         }
 
-        // label
-        const char * typeName = Node::GetTypeName( Node::Type( i ) );
-        const float value = (float)( (double)nodeStats.m_ProcessingTimeMS / (double)1000 );
-        //const uint32_t color = g_ReportNodeColors[ i ];
+        const uint32_t objCount = ls.objectCount_OutOfDate;
+        const float time = ((float)ls.cpuTimeMS * 0.001f); // ms to s
+        const float perc = (float)((double)time / (double)totalS * 100);
+        const char* type = ls.library->GetTypeName();
+        switch (ls.library->GetType())
+        {
+        case Node::LIBRARY_NODE: type = "Static"; break;
+        case Node::DLL_NODE: type = "DLL"; break;
+        case Node::CS_NODE: type = "C# DLL"; break;
+        case Node::OBJECT_LIST_NODE: type = "ObjectList"; break;
+        default: break;
+        }
+        const char* name = ls.library->GetName().Get();
 
-        //items.EmplaceBack( typeName, value, color, (void *)i );
+        Write("{");
+        Write("\n\t\t\t");
+
+        Write("\"Time\": \"%2.3fs\",\n\t\t\t", (double)time);
+        Write("\"%%\": \"%2.1f\",\n\t\t\t", (double)perc);
+        Write("\"Obj Built\": %u,\n\t\t\t", objCount);
+        Write("\"Type\": \"%s\",\n\t\t\t", type);
+        Write("\"Name\": \"%s\"\n\t\t", name);
+
+        Write("}");
+
+        if (numOutput < m_LibraryStats.GetSize() - 1)
+        {
+            Write(",\n\t\t");
+        }
+
+        numOutput++;
     }
 
-    items.Sort();
-
-    // pie chart
-    DoPieChart( items, " s" );
-
-    // table
-    DoTableStart();
-    Write( "<tr><th width=80>Type</th><th width=80>Time</th><th width=80>Processed</th><th width=80>Built</th><th width=80>Cache Hits</th></tr>\n" );
-    for ( size_t i=0; i < items.GetSize(); ++i )
-    {
-        const Node::Type type = (Node::Type)(size_t)items[ i ].userData;
-        const FBuildStats::Stats & nodeStats = stats.GetStatsFor( type );
-        if ( nodeStats.m_NumProcessed == 0 )
-        {
-            continue;
-        }
-
-        const char * typeName = Node::GetTypeName( type );
-        const float value = (float)( (double)nodeStats.m_ProcessingTimeMS / (double)1000 );
-        const uint32_t processed = nodeStats.m_NumProcessed;
-        const uint32_t built = nodeStats.m_NumBuilt;
-        const uint32_t cacheHits = nodeStats.m_NumCacheHits;
-
-        Write( "<tr><td>%s</td><td>%2.3fs</td><td>%u</td><td>%u</td>",
-                    typeName,
-                    (double)value,
-                    processed,
-                    built );
-        if ( type == Node::OBJECT_NODE )
-        {
-            // cacheable
-            Write( "<td>%u</td></tr>\n", cacheHits );
-        }
-        else
-        {
-            // non-cacheable
-            Write( "<td>-</td></tr>\n" );
-        }
-    }
-    DoTableStop();
+    // end CPU Time by Library array
+    Write("\n\t ]");
 }
 
 // DoCPUTimeByItem
@@ -388,13 +534,8 @@ void JsonReport::DoCPUTimeByItem( const FBuildStats & stats )
     const FBuildOptions & options = FBuild::Get().GetOptions();
     const bool cacheEnabled = ( options.m_UseCacheRead || options.m_UseCacheWrite );
 
-    //DoSectionTitle("CPU Time by Item", "cpuTimeByItem");
-
-    DoTableStart();
-
-    // Headings
-    Write( cacheEnabled ? "<tr><th style=\"width:100px;\">Time</th><th style=\"width:100px;\">Type</th><th style=\"width:120px;\">Cache</th><th>Name</th></tr>\n"
-                        : "<tr><th style=\"width:100px;\">Time</th><th style=\"width:100px;\">Type</th><th>Name</th></tr>\n");
+    Write("\"CPU Time by Item\": [\n");
+    Write("\t\t");
 
     size_t numOutput = 0;
 
@@ -409,103 +550,42 @@ void JsonReport::DoCPUTimeByItem( const FBuildStats & stats )
         const char * type = node->GetTypeName();
         const char * name = node->GetName().Get();
 
-        // start collapsable section
-        if ( numOutput == 10 )
-        {
-            DoToggleSection( (uint32_t)nodes.GetSize() - 10 );
-        }
-
         if ( cacheEnabled )
         {
             const bool cacheHit = node->GetStatFlag(Node::STATS_CACHE_HIT);
             const bool cacheStore = node->GetStatFlag(Node::STATS_CACHE_STORE);
 
-            Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:100px;\">%2.3fs</td><td style=\"width:100px;\">%s</td><td style=\"width:120px;\">%s</td><td>%s</td></tr>\n"
-                                       : "<tr><td>%2.3fs</td><td>%s</td><td>%s</td><td>%s</td></tr>\n", (double)time, type, cacheHit ? "HIT" : (cacheStore ? "STORE" : "N/A" ), name );
+            Write("{");
+            Write("\n\t\t\t");
+
+            Write( "\"Time\": \"%2.3fs\",\n\t\t\t", (double)time );
+            Write( "\"Type\": \"%s\",\n\t\t\t", type );
+            Write( "\"Cache\": \"%s\",\n\t\t\t", cacheHit ? "HIT" : (cacheStore ? "STORE" : "N/A") );
+            Write( "\"Name\": \"%s\"\n\t\t", name );
+
+            Write("}");
         }
         else
         {
-            Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:100px;\">%2.3fs</td><td style=\"width:100px;\">%s</td><td>%s</td></tr>\n"
-                                       : "<tr><td>%2.3fs</td><td>%s</td><td>%s</td></tr>\n", (double)time, type, name);
+            Write("{");
+            Write("\n\t\t\t");
 
+            Write("\"Time\": \"%2.3fs\",\n\t\t\t", (double)time);
+            Write("\"Type\": \"%s\"\,n\t\t\t", type);
+            Write("\"Name\": \"%s\"\n\t\t", name);
+
+            Write("}");
         }
+
+        if (numOutput < m_LibraryStats.GetSize() - 1)
+        {
+            Write(",\n\t\t");
+        }
+
         numOutput++;
     }
 
-    DoTableStop();
-
-    if ( numOutput > 10 )
-    {
-        Write( "</details>\n" );
-    }
-}
-
-// DoCPUTimeByLibrary
-//------------------------------------------------------------------------------
-void JsonReport::DoCPUTimeByLibrary()
-{
-    //DoSectionTitle( "CPU Time by Library", "cpuTimeByLibrary" );
-
-    DoTableStart();
-
-    // total
-    uint32_t total = 0;
-    const LibraryStats * const *  end = m_LibraryStats.End();
-    for ( LibraryStats ** it = m_LibraryStats.Begin(); it != end; ++it )
-    {
-        total += ( *it )->cpuTimeMS;
-    }
-    if ( total == 0 )
-    {
-        Write( "No libraries built.\n" );
-        return;
-    }
-
-    // Headings
-    Write( "<tr><th style=\"width:80px;\">Time</th><th style=\"width:50px;\">%%</th><th style=\"width:70px;\">Obj Built</th><th style=\"width:50px;\">Type</th><th>Name</th></tr>\n" );
-
-    const float totalS = (float)( (double)total * 0.001 );
-    size_t numOutput( 0 );
-    // Result
-    for ( LibraryStats ** it = m_LibraryStats.Begin(); it != end; ++it )
-    {
-        const LibraryStats & ls = *( *it );
-        if ( ls.cpuTimeMS == 0 )
-        {
-            continue;
-        }
-
-        // start collapsable section
-        if ( numOutput == 10 )
-        {
-            DoToggleSection();
-        }
-
-        const uint32_t objCount = ls.objectCount_OutOfDate;
-        const float time = ( (float)ls.cpuTimeMS * 0.001f ); // ms to s
-        const float perc = (float)( (double)time / (double)totalS * 100 );
-        const char * type = ls.library->GetTypeName();
-        switch ( ls.library->GetType() )
-        {
-            case Node::LIBRARY_NODE: type = "Static"; break;
-            case Node::DLL_NODE: type = "DLL"; break;
-            case Node::CS_NODE: type = "C# DLL"; break;
-            case Node::OBJECT_LIST_NODE: type = "ObjectList"; break;
-            default: break;
-        }
-        const char * name = ls.library->GetName().Get();
-        Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:80px;\">%2.3fs</td><td style=\"width:50px;\">%2.1f</td><td style=\"width:70px;\">%u</td><td style=\"width:50px;\">%s</td><td>%s</td></tr>\n"
-                                   : "<tr><td>%2.3fs</td><td>%2.1f</td><td>%u</td><td>%s</td><td>%s</td></tr>\n",
-                                        (double)time, (double)perc, objCount, type, name );
-        numOutput++;
-    }
-
-    DoTableStop();
-
-    if ( numOutput > 10 )
-    {
-        Write( "</details>\n" );
-    }
+    Write("\n\t ]");
 }
 
 // DoIncludes
@@ -514,6 +594,8 @@ PRAGMA_DISABLE_PUSH_MSVC( 6262 ) // warning C6262: Function uses '262212' bytes 
 void JsonReport::DoIncludes()
 {
     //DoSectionTitle( "Includes", "includes" );
+    Write("\"Includes\": [\n");
+    Write("\t\t");
 
     size_t numLibsOutput = 0;
 
@@ -536,17 +618,20 @@ void JsonReport::DoIncludes()
         incStatsMap.Flatten( incStats );
         incStats.SortDeref();
 
-        Write( "<h3>%s</h3>\n", library->GetName().Get() );
+        // Write( "<h3>%s</h3>\n", library->GetName().Get() );
+        Write( "{\n\t\t\t" );
+        Write( "\"Library name\": \"%s\",", library->GetName().Get() );
+        Write( "\n\t\t\t" );
+        Write( "\"Includes\": [" );
+        Write("\n\t\t\t\t");
+
         numLibsOutput++;
 
         if ( incStats.GetSize() == 0 )
         {
-            Write( "No includes.\n" );
+            Write( "]" );
             continue;
         }
-
-        DoTableStart();
-        Write( "<tr><th style=\"width:80px;\">Objects</th><th style=\"width:80px;\">Included</td><th style=\"width:60px;\">PCH</th><th>Name</th></tr>\n" );
 
         const uint32_t numObjects = ( *it )->objectCount;
 
@@ -560,149 +645,41 @@ void JsonReport::DoIncludes()
             const uint32_t included = s.count;
             const bool inPCH = s.inPCH;
 
-            // start collapsable section
-            if ( numOutput == 10 )
+            Write("{");
+            Write("\n\t\t\t\t\t");
+
+            Write("\"Objects\": %u,\n\t\t\t\t\t", numObjects);
+            Write("\"Included\": %u,\n\t\t\t\t\t", included);
+            Write("\"PCH\": \"%s\",\n\t\t\t\t\t", inPCH ? "YES" : "no");
+            Write("\"Name\": \"%s\"\n\t\t\t\t", fileName);
+
+            Write("}");
+
+            if (numOutput < numIncludes - 1)
             {
-                DoToggleSection( numIncludes - 10 );
+                Write(",\n\t\t\t\t");
             }
 
-            Write( ( numOutput == 10 ) ? "<tr></tr><tr><td style=\"width:80px;\">%u</td><td style=\"width:80px;\">%u</td><td style=\"width:60px;\">%s</td><td>%s</td></tr>\n"
-                                       : "<tr><td>%u</td><td>%u</td><td>%s</td><td>%s</td></tr>\n",
-                        numObjects,
-                        included,
-                        inPCH ? "YES" : "no",
-                        fileName );
             numOutput++;
         }
 
-        DoTableStop();
+        Write("\n\t\t}");
 
-        // end collpsable section
-        if ( numOutput > 10 )
+        if (numLibsOutput < m_LibraryStats.GetSize() - 1)
         {
-            Write( "</details>\n" );
+            Write(",\n\t\t");
         }
-    }
 
-    DoTableStop();
+    }
 
     if ( numLibsOutput == 0 )
     {
-        Write( "No libraries built.\n" );
+        Write( "]" );
     }
-}
-PRAGMA_DISABLE_POP_MSVC // warning C6262: Function uses '262212' bytes of stack
-
-// DoPieChart
-//------------------------------------------------------------------------------
-void JsonReport::DoPieChart( const Array< PieItem > & items, const char * units )
-{
-    AStackString<> buffer;
-
-    const uint32_t height = Math::Max< uint32_t >( 140, 40 + 25 * (uint32_t)items.GetSize() );
-
-    //m_NumPieCharts++;
-
-    Write( "<section>\n" );
-    Write( "<div>\n" );
-    //Write( "<canvas id=\"canvas%u\" width=\"500\" height=\"%u\">\n", m_NumPieCharts, height );
-    Write( "HTML5 Canvas support required.\n" );
-    Write( "</canvas>\n" );
-    Write( "</div>\n" );
-
-    Write( "<script type=\"text/javascript\">\n" );
-    Write( "    var myData = [" );
-    for ( size_t i=0; i<items.GetSize(); ++i )
+    else 
     {
-        if ( i > 0 )
-        {
-            Write( "," );
-        }
-        buffer.Format( "%2.3f", (double)( items[ i ].value ) );
-        Write( "%s", buffer.Get() );
+        Write("\n\t]");
     }
-    Write( "];\n" );
-    Write( "    var myLabels = [" );
-    for ( size_t i=0; i<items.GetSize(); ++i )
-    {
-        if ( i > 0 )
-        {
-            Write( "," );
-        }
-        Write( "\"%s\"", items[ i ].label );
-    }
-    Write( "];\n" );
-    Write( "    var myColors = [" );
-    for ( size_t i=0; i<items.GetSize(); ++i )
-    {
-        if ( i > 0 )
-        {
-            Write( "," );
-        }
-        Write( "\"#%x\"", items[ i ].color );
-    }
-    Write( "];\n" );
-
-    //Write( "    plotData(\"canvas%u\",myData,myLabels,myColors,\"%s\");\n", m_NumPieCharts, units );
-    Write( "</script>\n" );
-    Write( "</section>\n" );
-}
-
-// CreateFooter
-//------------------------------------------------------------------------------
-void JsonReport::CreateFooter()
-{
-    const char * footer =
-        "<br><br><br>\n"
-        "</body>\n"
-        "</html>\n";
-    m_Output += footer;
-}
-
-// DoTableStart
-//------------------------------------------------------------------------------
-void JsonReport::DoTableStart( uint32_t width, const char * id, bool hidden )
-{
-    AStackString<> output;
-    output.Format( "<table width=%u", width );
-    if ( id )
-    {
-        output += " id=\"";
-        output += id;
-        output += "\"";
-    }
-    if ( hidden )
-    {
-        output += " style=\"display:none;\"";
-    }
-    output += ">\n";
-    Write( "%s", output.Get() );
-}
-
-// DoTableStop
-//------------------------------------------------------------------------------
-void JsonReport::DoTableStop()
-{
-    Write( "</table>\n" );
-}
-
-// DoToggleSection
-//------------------------------------------------------------------------------
-void JsonReport::DoToggleSection( size_t numMore )
-{
-    static uint32_t tableId = 0;
-    ++tableId;
-    AStackString<> tableIdStr;
-    tableIdStr.Format( "table%u", tableId );
-
-    DoTableStop();
-    AStackString<> more;
-    if ( numMore )
-    {
-        more.Format( "%u ", (uint32_t)numMore );
-    }
-    Write( "<a href='javascript:toggleTable(\"%s\");'>%sMore...</a>\n", tableIdStr.Get(), more.Get() );
-    DoTableStart( DEFAULT_TABLE_WIDTH, tableIdStr.Get(), true ); // hide table
 }
 
 // Write
