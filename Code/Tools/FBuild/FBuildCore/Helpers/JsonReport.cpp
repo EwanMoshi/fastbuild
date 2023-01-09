@@ -79,12 +79,6 @@ void JsonReport::Generate( const FBuildStats & stats )
     // pre-allocate a large string for output
     m_Output.SetReserved( MEGABYTE );
     m_Output.SetLength( 0 );
-
-    // generate some common data used in reporting
-    //m_Output += "{\"name\":\"process_name\",\"ph\":\"M\",\"pid\":-2,\"tid\":0,\"args\":{\"name\":\"Memory Usage\"}},";
-
-    // probably don't need this
-    // JSON::Escape(m_Output);
     
     GetLibraryStats( stats );
     
@@ -151,7 +145,8 @@ void JsonReport::CreateOverview( const FBuildStats & stats )
 
     AStackString<> programName(commandLine);
     JSON::Escape(programName);
-    Write( "\"cmd line options\": \"%s\"\n\t\t\t", programName.Get() );
+    Write( "\"cmd line options\": \"%s\",\n\t\t\t", programName.Get() );
+    //Write("\"cmd line options\": \"%s\",\n\t\t\t", commandLine);
 
     // Target
     AStackString<> targets;
@@ -175,25 +170,25 @@ void JsonReport::CreateOverview( const FBuildStats & stats )
         }
     }
     //Write( "<tr><td>Target(s)</td><td>%s</td></tr>\n", targets.Get() );
-    Write( "\"Target(s)\": \"%s\"\n\t\t\t", targets.Get() );
+    Write( "\"Target(s)\": \"%s\",\n\t\t\t", targets.Get() );
 
     // Result
     const bool buildOK = ( stats.GetRootNode()->GetState() == Node::UP_TO_DATE );
     //Write( "<tr><td>Result</td><td>%s</td></tr>\n", buildOK ? "OK" : "FAILED" );
-    Write("\"Result\": \"%s\"\n\t\t\t", buildOK ? "OK" : "FAILED" );
+    Write("\"Result\": \"%s\",\n\t\t\t", buildOK ? "OK" : "FAILED" );
 
     // Real Time
     const float totalBuildTime = stats.m_TotalBuildTime;
     stats.FormatTime( totalBuildTime, buffer );
     //Write( "<tr><td>Time</td><td>%s</td></tr>\n", buffer.Get() );
-    Write("\"Time\": \"%s\"\n\t\t\t", buffer.Get() );
+    Write("\"Time\": \"%s\",\n\t\t\t", buffer.Get() );
 
     // Local CPU Time
     const float totalLocalCPUInSeconds = (float)( (double)stats.m_TotalLocalCPUTimeMS / (double)1000 );
     stats.FormatTime( totalLocalCPUInSeconds, buffer );
     const float localRatio = ( totalLocalCPUInSeconds / totalBuildTime );
     //Write( "<tr><td>CPU Time</td><td>%s (%2.1f:1)</td></tr>\n", buffer.Get(), (double)localRatio );
-    Write("\"CPU Time\": \"%s (%2.1f:1)\"\n\t\t\t", buffer.Get(), (double)localRatio );
+    Write("\"CPU Time\": \"%s (%2.1f:1)\",\n\t\t\t", buffer.Get(), (double)localRatio );
 
 
     // Remote CPU Time
@@ -201,11 +196,11 @@ void JsonReport::CreateOverview( const FBuildStats & stats )
     stats.FormatTime( totalRemoteCPUInSeconds, buffer );
     const float remoteRatio = ( totalRemoteCPUInSeconds / totalBuildTime );
     //Write( "<tr><td>Remote CPU Time</td><td>%s (%2.1f:1)</td></tr>\n", buffer.Get(), (double)remoteRatio );
-    Write("\"Remote CPU Time\": \"%s (%2.1f:1)\"\n\t\t\t", buffer.Get(), (double)remoteRatio);
+    Write("\"Remote CPU Time\": \"%s (%2.1f:1)\",\n\t\t\t", buffer.Get(), (double)remoteRatio);
 
     // version info
     //Write( "<tr><td>Version</td><td>%s %s</td></tr>\n", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM );
-    Write("\"Version\": \"%s %s\"\n\t\t\t", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM);
+    Write("\"Version\": \"%s %s\",\n\t\t\t", FBUILD_VERSION_STRING, FBUILD_VERSION_PLATFORM);
 
     // report time
     time_t rawtime;
@@ -220,9 +215,8 @@ void JsonReport::CreateOverview( const FBuildStats & stats )
     // Mon 1-Jan-2000 - 18:01:15
     VERIFY( strftime( timeBuffer, 256, "%a %d-%b-%Y - %H:%M:%S", timeinfo ) > 0 );
 
-    // NOTE: leave space to patch in time taken later "^^^^                          "
-    //Write( "<tr><td>Report Generated</td><td>^^^^                         - %s</td></tr>\n", timeBuffer );
-    Write("\"Report Generated\": \"^^^^                         - %s\"\n\t", timeBuffer);
+    // NOTE: leave space to patch in time taken later "^^^^    "
+    Write("\"Report Generated\": \"^^^^    - %s\"\n\t", timeBuffer);
     Write("}");
 }
 
@@ -464,8 +458,7 @@ void JsonReport::DoCacheStats( const FBuildStats & stats )
 //------------------------------------------------------------------------------
 void JsonReport::DoCPUTimeByLibrary()
 {
-    Write("\"CPU Time by Library\": [\n");
-    Write("\t\t");
+    Write("\"CPU Time by Library\": [");
 
     // total
     uint32_t total = 0;
@@ -476,9 +469,11 @@ void JsonReport::DoCPUTimeByLibrary()
     }
     if (total == 0)
     {
-        Write("}");
+        Write("]");
         return;
     }
+
+    Write("\n\t\t");
 
     const float totalS = (float)((double)total * 0.001);
     size_t numOutput(0);
@@ -512,7 +507,11 @@ void JsonReport::DoCPUTimeByLibrary()
         Write("\"%%\": \"%2.1f\",\n\t\t\t", (double)perc);
         Write("\"Obj Built\": %u,\n\t\t\t", objCount);
         Write("\"Type\": \"%s\",\n\t\t\t", type);
-        Write("\"Name\": \"%s\"\n\t\t", name);
+
+        AStackString<> itemName(name);
+        JSON::Escape(itemName);
+        //Write("\"cmd line options\": \"%s\",\n\t\t\t", itemName.Get());
+        Write("\"Name\": \"%s\"\n\t\t", itemName.Get());
 
         Write("}");
 
@@ -562,7 +561,12 @@ void JsonReport::DoCPUTimeByItem( const FBuildStats & stats )
             Write( "\"Time\": \"%2.3fs\",\n\t\t\t", (double)time );
             Write( "\"Type\": \"%s\",\n\t\t\t", type );
             Write( "\"Cache\": \"%s\",\n\t\t\t", cacheHit ? "HIT" : (cacheStore ? "STORE" : "N/A") );
-            Write( "\"Name\": \"%s\"\n\t\t", name );
+
+            AStackString<> itemName(name);
+            JSON::Escape(itemName);
+            Write("\"Name\": \"%s\"\n\t\t", itemName.Get() );
+            // Write("\"Name\": \"%s\"\n\t\t", itemName.Get());
+
 
             Write("}");
         }
@@ -573,12 +577,16 @@ void JsonReport::DoCPUTimeByItem( const FBuildStats & stats )
 
             Write("\"Time\": \"%2.3fs\",\n\t\t\t", (double)time);
             Write("\"Type\": \"%s\"\,n\t\t\t", type);
-            Write("\"Name\": \"%s\"\n\t\t", name);
+
+            AStackString<> itemName(name);
+            JSON::Escape(itemName);
+            Write("\"Name\": \"%s\"\n\t\t", itemName.Get());
+            //Write("\"Name\": \"%s\"\n\t\t", name);
 
             Write("}");
         }
 
-        if (numOutput < m_LibraryStats.GetSize() - 1)
+        if (numOutput < nodes.GetSize() - 1)
         {
             Write(",\n\t\t");
         }
