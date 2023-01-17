@@ -36,9 +36,9 @@ private:
     void DoCPUTimeByLibrary();
     void DoIncludes();
 
-    struct NodeTypeTiming
+    struct TimingStats
     {
-        NodeTypeTiming( const char * l, float v, void * u = nullptr )
+        TimingStats( const char * l, float v, void * u = nullptr )
             : label( l )
             , value( v )
             , userData( u )
@@ -49,7 +49,7 @@ private:
         float           value;
         void *          userData;
 
-        bool operator < ( const NodeTypeTiming& other ) const { return value > other.value; }
+        bool operator < ( const TimingStats& other ) const { return value > other.value; }
     };
     
     struct IncludeStats

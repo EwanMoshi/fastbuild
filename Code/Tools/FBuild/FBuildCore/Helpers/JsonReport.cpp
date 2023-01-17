@@ -224,12 +224,10 @@ void JsonReport::CreateOverview( const FBuildStats & stats )
 //------------------------------------------------------------------------------
 void JsonReport::DoCPUTimeByType(const FBuildStats& stats)
 {
-    Write("\"CPU Time by Node Type\": {\n");
-    Write("\t\t");
-    Write("\"summary\": {\n\t\t\t");
+    Write("\"CPU Time by Node Type\": {");
+    Write("\n\t\t");
 
-    // Summary for node types
-    Array< NodeTypeTiming > items(32, true);
+    Array< TimingStats > items(32, true);
 
     for (size_t i = 0; i < (size_t)Node::NUM_NODE_TYPES; ++i)
     {
@@ -258,26 +256,6 @@ void JsonReport::DoCPUTimeByType(const FBuildStats& stats)
     AStackString<> buffer;
     for (size_t i = 0; i < items.GetSize(); ++i)
     {
-        double percent = 100.0 * items[i].value / total;
-
-        //buffer.Format("%2.3f", (double)(items[i].value));
-        buffer.Format("\"%2.1f%%"" (% 2.3f s)\"", percent, (double)(items[i].value));
-        Write("\"%s\": %s", items[i].label, buffer.Get());
-
-        // add a comma and new line as long as we're not the last item
-        if (i < items.GetSize() - 1)
-        {
-            Write(",\n\t\t\t");
-        }
-    }
-    // end of summary section
-    Write("\n\t\t},");
-
-    // node type timing information
-    Write("\n\t\t\"details\": [\n\t\t\t");
-
-    for (size_t i = 0; i < items.GetSize(); ++i)
-    {
         const Node::Type type = (Node::Type)(size_t)items[i].userData;
         const FBuildStats::Stats& nodeStats = stats.GetStatsFor(type);
         if (nodeStats.m_NumProcessed == 0)
@@ -291,11 +269,9 @@ void JsonReport::DoCPUTimeByType(const FBuildStats& stats)
         const uint32_t built = nodeStats.m_NumBuilt;
         const uint32_t cacheHits = nodeStats.m_NumCacheHits;
 
-        Write("{");
-        Write("\n\t\t\t\t");
+        Write( "\"%s\": {", typeName );
+        Write( "\n\t\t\t\t" );
 
-        Write("\"Type\": \"%s\",\n\t\t\t\t", typeName);
-        // TODO: look into this, the time seems wrong
         Write("\"Time (s)\": %2.3f,\n\t\t\t\t", (double)value);
         Write("\"Processed\": %u,\n\t\t\t\t", processed);
         Write("\"Built\": %u,\n\t\t\t\t", built);
@@ -303,24 +279,26 @@ void JsonReport::DoCPUTimeByType(const FBuildStats& stats)
         if (type == Node::OBJECT_NODE)
         {
             // cacheable
-            Write("\"Cache Hits\": %u\n\t\t\t", cacheHits);
+            Write("\"Cache Hits\": %u,\n\t\t\t\t", cacheHits);
         }
         else
         {
             // non-cacheable
-            Write("\"Cache Hits\": \"-\"\n\t\t\t");
+            Write("\"Cache Hits\": \"-\",\n\t\t\t\t");
         }
 
+        double percent = 100.0 * items[i].value / total;
+        Write("\"Percentage\": %2.1f", percent);
+
+        Write("\n\t\t");
         Write("}");
 
         if (i < items.GetSize() - 1)
         {
-            Write(",\n\t\t\t");
+            Write(",\n\t\t");
         }
     }
 
-    // end of node timing information
-    Write("\n\t\t ]");
     Write("\n\t}");
 }
 
@@ -349,7 +327,6 @@ void JsonReport::DoCacheStats( const FBuildStats & stats )
         }
         if ( totalOutOfDateItems == 0 )
         {
-            // Write( "No cacheable items were built.\n" );
             Write("\t}");
             return;
         }
@@ -358,9 +335,8 @@ void JsonReport::DoCacheStats( const FBuildStats & stats )
         Write("\t\t");
         Write("\"summary\": {\n\t\t\t");
 
-        // TODO: This probably needs a new type. NodeTypeTiming is not right here, it's more like LibraryCacheStats or CacheStats
-        // Could even consider making a generic struct like "TimingStats"
-        Array< NodeTypeTiming > items( 3, false );
+
+        Array< TimingStats > items( 3, false );
         items.EmplaceBack( "Uncacheable", (float)(totalOutOfDateItems - totalCacheable) );
         items.EmplaceBack( "Cache Miss", (float)totalCacheMisses );
         items.EmplaceBack( "Cache Hit", (float)totalCacheHits );
@@ -370,8 +346,13 @@ void JsonReport::DoCacheStats( const FBuildStats & stats )
         {
             double percent = 100.0 * items[i].value / totalOutOfDateItems;
 
-            buffer.Format("\"%2.1f%%"" (%u s)\"", percent, (uint32_t)(items[i].value));
-            Write("\"%s\": %s", items[i].label, buffer.Get());
+            Write( "\"%s\": {", items[i].label );
+            Write( "\n\t\t\t\t" );
+            Write( "\"Time (s)\": %2.3f,", (uint32_t)(items[i].value) );
+            Write("\n\t\t\t\t");
+            Write( "\"Percentage\": %2.1f", percent );
+            Write("\n\t\t\t");
+            Write("}");
 
             // add a comma and new line as long as we're not the last item
             if (i < items.GetSize() - 1)
@@ -425,12 +406,43 @@ void JsonReport::DoCacheStats( const FBuildStats & stats )
             Write("\n\t\t\t\t");
 
             Write("\"Library\": \"%s\",\n\t\t\t\t", libraryName);
-            // TODO: look into this, the time seems wrong
             Write("\"Items\": %u,\n\t\t\t\t", items);
-            Write("\"Out-of-Date\": \"%u (%2.1f%%)\",\n\t\t\t\t", outOfDateItems, (double)outOfDateItemsPerc);
-            Write("\"Cacheable\": \"%u (%2.1f%%)\",\n\t\t\t\t", cItems, (double)cItemsPerc);
-            Write("\"Hits\": \"%u (%2.1f%%)\",\n\t\t\t\t", cHits, (double)cHitsPerc);
-            Write("\"Misses\": \"%u (%2.1f%%)\",\n\t\t\t\t", cMisses, (double)cMissesPerc);
+            Write("\"Out-of-Date\": {");
+            Write("\n\t\t\t\t\t");
+            Write("\"Count\": %u,", outOfDateItems);
+            Write("\n\t\t\t\t\t");
+            Write("\"Percentage\": %2.1f", (double)outOfDateItemsPerc);
+            Write("\n\t\t\t\t");
+            Write("},");
+            Write("\n\t\t\t\t");
+
+            Write("\"Cacheable\": {");
+            Write("\n\t\t\t\t\t");
+            Write("\"Count\": %u,", cItems);
+            Write("\n\t\t\t\t\t");
+            Write("\"Percentage\": %2.1f", (double)cItemsPerc);
+            Write("\n\t\t\t\t");
+            Write("},");
+            Write("\n\t\t\t\t");
+
+            Write("\"Hits\": {");
+            Write("\n\t\t\t\t\t");
+            Write("\"Count\": %u,", cHits);
+            Write("\n\t\t\t\t\t");
+            Write("\"Percentage\": %2.1f", (double)cHitsPerc);
+            Write("\n\t\t\t\t");
+            Write("},");
+            Write("\n\t\t\t\t");
+
+            Write("\"Misses\": {");
+            Write("\n\t\t\t\t\t");
+            Write("\"Count\": %u,", cMisses);
+            Write("\n\t\t\t\t\t");
+            Write("\"Percentage\": %2.1f", (double)cMissesPerc);
+            Write("\n\t\t\t\t");
+            Write("},");
+            Write("\n\t\t\t\t");
+
             Write("\"Stores\": %u,\n\t\t\t\t", cStores);
             Write("\"Store Time (s)\": %2.3f\n\t\t\t", (double)cStoreTime);
 
@@ -503,8 +515,8 @@ void JsonReport::DoCPUTimeByLibrary()
         Write("{");
         Write("\n\t\t\t");
 
-        Write("\"Time\": \"%2.3fs\",\n\t\t\t", (double)time);
-        Write("\"%%\": \"%2.1f\",\n\t\t\t", (double)perc);
+        Write("\"Time (s)\": %2.3f,\n\t\t\t", (double)time);
+        Write("\"Percentage\": %2.1f,\n\t\t\t", (double)perc);
         Write("\"Obj Built\": %u,\n\t\t\t", objCount);
         Write("\"Type\": \"%s\",\n\t\t\t", type);
 
@@ -558,7 +570,7 @@ void JsonReport::DoCPUTimeByItem( const FBuildStats & stats )
             Write("{");
             Write("\n\t\t\t");
 
-            Write( "\"Time\": \"%2.3fs\",\n\t\t\t", (double)time );
+            Write( "\"Time (s)\": %2.3f,\n\t\t\t", (double)time );
             Write( "\"Type\": \"%s\",\n\t\t\t", type );
             Write( "\"Cache\": \"%s\",\n\t\t\t", cacheHit ? "HIT" : (cacheStore ? "STORE" : "N/A") );
 
@@ -660,7 +672,11 @@ void JsonReport::DoIncludes()
             Write("\"Objects\": %u,\n\t\t\t\t\t", numObjects);
             Write("\"Included\": %u,\n\t\t\t\t\t", included);
             Write("\"PCH\": \"%s\",\n\t\t\t\t\t", inPCH ? "YES" : "no");
-            Write("\"Name\": \"%s\"\n\t\t\t\t", fileName);
+
+            AStackString<> programName(fileName);
+            JSON::Escape(programName);
+
+            Write("\"Name\": \"%s\"\n\t\t\t\t", programName.Get());
 
             Write("}");
 
@@ -671,6 +687,8 @@ void JsonReport::DoIncludes()
 
             numOutput++;
         }
+
+        Write("\n\t\t\t]");
 
         Write("\n\t\t}");
 
