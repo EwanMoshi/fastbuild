@@ -296,7 +296,6 @@ void JsonReport::DoCacheStats( const FBuildStats & stats )
         Write( "\t\t" );
         Write( "\"summary\": {\n\t\t\t" );
 
-
         Array< TimingStats > items( 3, false );
         items.EmplaceBack( "Uncacheable", (float)(totalOutOfDateItems - totalCacheable) );
         items.EmplaceBack( "Cache Miss", (float)totalCacheMisses );
@@ -363,6 +362,11 @@ void JsonReport::DoCacheStats( const FBuildStats & stats )
             const uint32_t  cStores     = ls.objectCount_CacheStores;
             const float     cStoreTime  = (float)ls.cacheTimeMS / 1000.0f; // ms to s
 
+            if ( numOutput > 0 )
+            {
+                Write( ",\n\t\t\t" );
+            }
+
             Write( "{" );
             Write( "\n\t\t\t\t" );
 
@@ -408,11 +412,6 @@ void JsonReport::DoCacheStats( const FBuildStats & stats )
             Write( "\"Store Time (s)\": %2.3f\n\t\t\t", (double)cStoreTime );
 
             Write( "}" );
-
-            if (numOutput < m_LibraryStats.GetSize() - 1 )
-            {
-                Write( ",\n\t\t\t" );
-            }
 
             numOutput++;
         }
@@ -571,8 +570,8 @@ void JsonReport::DoCPUTimeByItem( const FBuildStats & stats )
 PRAGMA_DISABLE_PUSH_MSVC( 6262 ) // warning C6262: Function uses '262212' bytes of stack
 void JsonReport::DoIncludes()
 {
-    Write( "\"Includes\": [\n" );
-    Write( "\t\t" );
+    Write( "\"Includes\": [" );
+    Write( "\n\t\t" );
 
     size_t numLibsOutput = 0;
 
@@ -599,15 +598,21 @@ void JsonReport::DoIncludes()
         Write( "\"Library name\": \"%s\",", library->GetName().Get() );
         Write( "\n\t\t\t" );
         Write( "\"Includes\": [" );
-        Write( "\n\t\t\t\t" );
-
-        numLibsOutput++;
 
         if ( incStats.GetSize() == 0 )
         {
-            Write( "]" );
+            Write( "]\n\t\t}" );
+
+            // insert a comma for next library if we are not done yet
+            if (numLibsOutput < m_LibraryStats.GetSize() - 1)
+            {
+                Write(",\n\t\t");
+            }
+
             continue;
         }
+
+        Write("\n\t\t\t\t");
 
         const uint32_t numObjects = ( *it )->objectCount;
 
@@ -652,6 +657,7 @@ void JsonReport::DoIncludes()
             Write( ",\n\t\t" );
         }
 
+        numLibsOutput++;
     }
 
     if ( numLibsOutput == 0 )
