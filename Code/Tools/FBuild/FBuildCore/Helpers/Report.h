@@ -4,7 +4,10 @@
 
 // Includes
 //------------------------------------------------------------------------------
+#include "Core/Env/MSVCStaticAnalysis.h"
 #include "Core/Containers/Array.h"
+#include "Core/Mem/MemPoolBlock.h"
+#include "Core/Strings/AString.h"
 
 // Forward Declarations
 //------------------------------------------------------------------------------
@@ -38,11 +41,47 @@ protected:
         bool operator < ( const LibraryStats & other ) const { return cpuTimeMS > other.cpuTimeMS; }
     };
     
+    struct IncludeStats
+    {
+        const Node* node;
+        uint32_t        count;
+        bool            inPCH;
+
+        bool operator < (const IncludeStats& other) const { return count > other.count; }
+
+        IncludeStats* m_Next; // in-place hash map chain
+    };
+
+    class IncludeStatsMap
+    {
+    public:
+        IncludeStatsMap();
+        ~IncludeStatsMap();
+
+        IncludeStats* Find(const Node* node) const;
+        IncludeStats* Insert(const Node* node);
+
+        void Flatten(Array< const IncludeStats* >& stats) const;
+    protected:
+        IncludeStats* m_Table[65536];
+        MemPoolBlock m_Pool;
+    };
+
+    // Helper to format some text
+    void Write(MSVC_SAL_PRINTF const char* fmtString, ...) FORMAT_STRING(2, 3);
+
     // gather stats
     void GetLibraryStats( const FBuildStats & stats );
     void GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const Node * node, LibraryStats * currentLib ) const;
     void GetLibraryStatsRecurse( Array< LibraryStats * > & libStats, const Dependencies & dependencies, LibraryStats * currentLib ) const;
+    void GetIncludeFilesRecurse(IncludeStatsMap& incStats, const Node* node) const;
+    void AddInclude(IncludeStatsMap& incStats, const Node* node, const Node* parentNode) const;
 
     // intermediate collected data
     Array< LibraryStats * > m_LibraryStats;
+
+    // final output
+    AString m_Output;
 };
+
+//------------------------------------------------------------------------------

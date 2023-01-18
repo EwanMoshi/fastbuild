@@ -8,8 +8,8 @@
 // FBuild
 #include "Tools/FBuild/FBuildCore/FBuild.h"
 #include "Tools/FBuild/FBuildCore/FBuildVersion.h"
-#include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
-#include "Tools/FBuild/FBuildCore/Helpers/FBuildStats.h"
+//#include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
+//#include "Tools/FBuild/FBuildCore/Helpers/FBuildStats.h"
 
 // Core
 #include "Core/Env/Env.h"
@@ -17,7 +17,6 @@
 #include "Core/Strings/AStackString.h"
 
 // system
-#include <stdarg.h> // for va_args
 #include <string.h>
 #include <time.h>
 
@@ -856,165 +855,6 @@ void HtmlReport::DoToggleSection( size_t numMore )
     }
     Write( "<a href='javascript:toggleTable(\"%s\");'>%sMore...</a>\n", tableIdStr.Get(), more.Get() );
     DoTableStart( DEFAULT_TABLE_WIDTH, tableIdStr.Get(), true ); // hide table
-}
-
-// Write
-//------------------------------------------------------------------------------
-void HtmlReport::Write( MSVC_SAL_PRINTF const char * fmtString, ... )
-{
-    AStackString< 1024 > tmp;
-
-    va_list args;
-    va_start(args, fmtString);
-    tmp.VFormat( fmtString, args );
-    va_end( args );
-
-    // resize output buffer in large chunks to prevent re-sizing
-    if ( m_Output.GetLength() + tmp.GetLength() > m_Output.GetReserved() )
-    {
-        m_Output.SetReserved( m_Output.GetReserved() + MEGABYTE );
-    }
-
-    m_Output += tmp;
-}
-
-// GetIncludeFilesRecurse
-//------------------------------------------------------------------------------
-void HtmlReport::GetIncludeFilesRecurse( IncludeStatsMap & incStats, const Node * node ) const
-{
-    const Node::Type type = node->GetType();
-    if ( type == Node::OBJECT_NODE )
-    {
-        // Dynamic Deps
-        const Dependencies & dynamicDeps = node->GetDynamicDependencies();
-        const Dependency * const end = dynamicDeps.End();
-        for ( const Dependency * it = dynamicDeps.Begin(); it != end; ++it )
-        {
-            AddInclude( incStats, it->GetNode(), node );
-        }
-
-        return;
-    }
-
-    // Static Deps
-    const Dependencies & staticDeps = node->GetStaticDependencies();
-    const Dependency * end = staticDeps.End();
-    for ( const Dependency * it = staticDeps.Begin(); it != end; ++it )
-    {
-        GetIncludeFilesRecurse( incStats, it->GetNode() );
-    }
-
-    // Dynamic Deps
-    const Dependencies & dynamicDeps = node->GetDynamicDependencies();
-    end = dynamicDeps.End();
-    for ( const Dependency * it = dynamicDeps.Begin(); it != end; ++it )
-    {
-        GetIncludeFilesRecurse( incStats, it->GetNode() );
-    }
-}
-
-// AddInclude
-//------------------------------------------------------------------------------
-void HtmlReport::AddInclude( IncludeStatsMap & incStats, const Node * node, const Node * parentNode ) const
-{
-    bool isHeaderInPCH = false;
-    if ( parentNode->GetType() == Node::OBJECT_NODE )
-    {
-        const ObjectNode * obj = parentNode->CastTo< ObjectNode >();
-        isHeaderInPCH = obj->IsCreatingPCH();
-    }
-
-    // check for existing
-    IncludeStats * stats = incStats.Find( node );
-    if ( stats == nullptr )
-    {
-        stats = incStats.Insert( node );
-    }
-
-    stats->count++;
-    stats->inPCH |= isHeaderInPCH;
-}
-
-// IncludeStatsMap (CONSTRUCTOR)
-//------------------------------------------------------------------------------
-HtmlReport::IncludeStatsMap::IncludeStatsMap()
-    : m_Pool( sizeof( IncludeStats ), __alignof( IncludeStats ) )
-{
-    memset( m_Table, 0, sizeof( m_Table ) );
-}
-
-// IncludeStatsMap (DESTRUCTOR)
-//------------------------------------------------------------------------------
-HtmlReport::IncludeStatsMap::~IncludeStatsMap()
-{
-    for ( size_t i=0; i<65536; ++i )
-    {
-        IncludeStats * item = m_Table[ i ];
-        while ( item )
-        {
-            IncludeStats * next = item->m_Next;
-            m_Pool.Free( item );
-            item = next;
-        }
-    }
-}
-
-// Find
-//------------------------------------------------------------------------------
-HtmlReport::IncludeStats * HtmlReport::IncludeStatsMap::Find( const Node * node ) const
-{
-    // caculate table entry
-    const uint32_t hash = node->GetNameCRC();
-    const uint32_t key = ( hash & 0xFFFF );
-    IncludeStats * item = m_Table[ key ];
-
-    // check linked list
-    while ( item )
-    {
-        if ( item->node == node )
-        {
-            return item;
-        }
-        item = item->m_Next;
-    }
-
-    // not found
-    return nullptr;
-}
-
-// Insert
-//------------------------------------------------------------------------------
-HtmlReport::IncludeStats * HtmlReport::IncludeStatsMap::Insert( const Node * node )
-{
-    // caculate table entry
-    const uint32_t hash = node->GetNameCRC();
-    const uint32_t key = ( hash & 0xFFFF );
-
-    // insert new item
-    IncludeStats * newStats = (IncludeStats *)m_Pool.Alloc();
-    newStats->node = node;
-    newStats->count = 0;
-    newStats->inPCH = false;
-    newStats->m_Next = m_Table[ key ];
-    m_Table[ key ] = newStats;
-
-    return newStats;
-}
-
-// Flatten
-//------------------------------------------------------------------------------
-void HtmlReport::IncludeStatsMap::Flatten( Array< const IncludeStats * > & stats ) const
-{
-    for ( size_t i=0; i<65536; ++i )
-    {
-        IncludeStats * item = m_Table[ i ];
-        while ( item )
-        {
-            IncludeStats * next = item->m_Next;
-            stats.Append( item );
-            item = next;
-        }
-    }
 }
 
 //------------------------------------------------------------------------------
