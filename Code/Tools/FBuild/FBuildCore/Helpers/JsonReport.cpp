@@ -200,7 +200,7 @@ void JsonReport::DoCPUTimeByType(const FBuildStats& stats)
 
         // label
         const char* typeName = Node::GetTypeName( Node::Type(i) );
-        const float value = (float)((double)nodeStats.m_ProcessingTimeMS / (double)1000);
+        const float value = (float)( (double)nodeStats.m_ProcessingTimeMS / (double)1000 );
 
         items.EmplaceBack( typeName, value, (void *)i );
     }
@@ -225,7 +225,7 @@ void JsonReport::DoCPUTimeByType(const FBuildStats& stats)
         }
 
         const char* typeName = Node::GetTypeName( type );
-        const float value = (float)((double)nodeStats.m_ProcessingTimeMS / (double)1000);
+        const float value = (float)( (double)nodeStats.m_ProcessingTimeMS / (double)1000 );
         const uint32_t processed = nodeStats.m_NumProcessed;
         const uint32_t built = nodeStats.m_NumBuilt;
         const uint32_t cacheHits = nodeStats.m_NumCacheHits;

@@ -352,7 +352,6 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_ShowVerbose = false;
                 continue;
             }
-            //else if ( thisArg == "-report" )
             else if (thisArg.BeginsWith("-report"))
             {
                 Array<AString> reportTokens;

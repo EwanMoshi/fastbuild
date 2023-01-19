@@ -79,7 +79,6 @@ void FBuildStats::OnBuildStop( Node * node )
         {
             Report* report = options.GetReport();
 
-            //HtmlReport r;
             report->Generate( *this );
             report->Save();
 
