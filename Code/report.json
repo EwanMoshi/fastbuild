@@ -1,0 +1,102 @@
+{
+	"Overview": {
+			"cmd line options": "\"fbuild\" -vs -dist -report=json -monitor -cache \"All-x64-Debug\" -wrapperintermediate -wrapperfinal",
+			"Target(s)": "All-x64-Debug",
+			"Result": "OK",
+			"Time": "0.032s",
+			"CPU Time": "0.009s (0.3:1)",
+			"Remote CPU Time": "0.000s (0.0:1)",
+			"Version": "v1.08 Windows",
+			"Report Generated": "0.001s  - Thu 19-Jan-2023 - 13:47:09"
+	},
+	"CPU Time by Node Type": {
+		"Directory": {
+				"Time (s)": 0.009,
+				"Processed": 8,
+				"Built": 8,
+				"Cache Hits": "-",
+				"Percentage": 100.0
+		},
+		"File": {
+				"Time (s)": 0.000,
+				"Processed": 615,
+				"Built": 615,
+				"Cache Hits": "-",
+				"Percentage": 0.0
+		},
+		"Object": {
+				"Time (s)": 0.000,
+				"Processed": 244,
+				"Built": 0,
+				"Cache Hits": 0,
+				"Percentage": 0.0
+		},
+		"Alias": {
+				"Time (s)": 0.000,
+				"Processed": 1,
+				"Built": 1,
+				"Cache Hits": "-",
+				"Percentage": 0.0
+		},
+		"Exe": {
+				"Time (s)": 0.000,
+				"Processed": 4,
+				"Built": 0,
+				"Cache Hits": "-",
+				"Percentage": 0.0
+		},
+		"Unity": {
+				"Time (s)": 0.000,
+				"Processed": 8,
+				"Built": 0,
+				"Cache Hits": "-",
+				"Percentage": 0.0
+		},
+		"Compiler": {
+				"Time (s)": 0.000,
+				"Processed": 2,
+				"Built": 0,
+				"Cache Hits": "-",
+				"Percentage": 0.0
+		},
+		"ObjectList": {
+				"Time (s)": 0.000,
+				"Processed": 10,
+				"Built": 0,
+				"Cache Hits": "-",
+				"Percentage": 0.0
+		},
+		"TextFile": {
+				"Time (s)": 0.000,
+				"Processed": 4,
+				"Built": 0,
+				"Cache Hits": "-",
+				"Percentage": 0.0
+		}
+	},
+	"Cache Stats": {
+	},
+	"CPU Time by Library": [],
+	"CPU Time by Item": [
+		{
+			"Time (s)": 0.007,
+			"Type": "Directory",
+			"Cache": "N/A",
+			"Name": "T:\\fastbuild\\Code\\Tools\\FBuild\\FBuildTest\\|*.cpp|true|rw|T:\\fastbuild\\Code\\Tools\\FBuild\\FBuildTest\\Data\\<"
+		},
+		{
+			"Time (s)": 0.001,
+			"Type": "Directory",
+			"Cache": "N/A",
+			"Name": "T:\\fastbuild\\Code\\Core\\|*.cpp|true|rw|T:\\fastbuild\\Code\\Core\\CoreTest\\<|Core\\Mem\\MemTracker.cpp<"
+		},
+		{
+			"Time (s)": 0.001,
+			"Type": "Directory",
+			"Cache": "N/A",
+			"Name": "T:\\fastbuild\\Code\\Tools\\FBuild\\FBuildCore\\|*.cpp|true|rw|"
+		}
+	 ],
+	"Includes": [
+		]
+}
