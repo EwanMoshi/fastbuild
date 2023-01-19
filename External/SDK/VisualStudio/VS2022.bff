@@ -50,9 +50,9 @@
                 Print( '-----------------------------------------------------------------------' )
                 Print( '- Unable to auto-detect VS2022 - please specify installation manually -' )
                 Print( '-----------------------------------------------------------------------' )
-                .VS2022_BasePath        = 'C:/Program Files/Microsoft Visual Studio/2022/Professional/VC'    // <-- Set path here
-                .VS2022_Version         = '14.34.31933' // <-- Set version here
-                .VS2022_MSC_VER         = '1929' // <-- Set MSC_VER here
+                .VS2022_BasePath        = .Set_Path_Here    // <-- Set path here
+                .VS2022_Version         = .Set_Version_Here // <-- Set version here
+                .VS2022_MSC_VER         = .Set_MSC_VER_Here // <-- Set MSC_VER here
             #endif
         #endif
     #endif
@@ -112,7 +112,7 @@ Compiler( 'Compiler-VS2022-x64' )
 
                                     // Warnings
                                     + ' /Wall'              // Enable all warnings (we'll disable those that are not useful)
-                                    //+ ' /WX'                // Warnings as errors
+                                    + ' /WX'                // Warnings as errors
 
                                     // These warnings are not useful
                                     + ' /wd4061' // enumerator '%s' in switch of enum '%s' is not explicitly handled by a case label
