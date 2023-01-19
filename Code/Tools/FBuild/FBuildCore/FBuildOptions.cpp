@@ -668,7 +668,7 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -profile          Output an fbuild_profiling.json describing the build.\n"
             " -progress         Show build progress bar even if stdout is redirected.\n"
             " -quiet            Don't show build output.\n"
-            " -report<=json|html>\n
+            " -report<=json|html>\n"
             "                   Ouput report(default html) at build end. (Increases build time)\n"
             "                   - =html : outputs a report.html file\n"
             "                   - =json : outputs a report.json file\n"
